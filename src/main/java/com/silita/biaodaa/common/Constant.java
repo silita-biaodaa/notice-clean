@@ -1,6 +1,11 @@
 package com.silita.biaodaa.common;
 
-public class Constant {
-	public static final String SPLIT_STRING = "@@####@@";
-    public static final String DEFAULT_STRING = "___";
+public interface Constant {
+	String SPLIT_STRING = "@@####@@";
+    
+    String DEFAULT_STRING = "___";
+    
+    String NOTICE_START="analysis";
+    
+    String HUNAN_SOURCE="hunan";//湖南
 }

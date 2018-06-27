@@ -16,7 +16,6 @@
     <!-- 激活annotation功能 -->
 	<context:annotation-config />
 
-
 	<!-- 加载redis配置文件 -->
 	<context:property-placeholder location="classpath:config/clean.properties" />
 
@@ -40,8 +39,6 @@
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"
 		  p:basePackage="com.silita.biaodaa.dao" p:sqlSessionFactoryBeanName="sqlSessionFactory" />
 
-
-
 	<bean id="txManager"
 		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 		<property name="dataSource" ref="dataSource" />
@@ -63,4 +60,7 @@
     </bean>
 
 	<import resource="applicationContext-redis.xml" />
+	<import resource="applicationContext-cache.xml" />
+	<import resource="applicationContext-es.xml" />
+	<import resource="applicationContext-rules.xml" />
 </beans>
