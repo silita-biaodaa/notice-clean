@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 
+@Deprecated
 public class JdbcBase extends DaoSupport {
 
 	private JdbcTemplate jdbcTemplate;
