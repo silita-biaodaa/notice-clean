@@ -705,4 +705,23 @@ public class DateUtils {
 
 	}
 
+	public static int compareStrDate(String strDate1, String strDate2){
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+		Date dt1=null;
+		Date dt2=null;
+		try {
+			dt1 = sdf.parse(strDate1);
+			dt2 = sdf.parse(strDate2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(dt2.after(dt1)) {   //dt2 > dt1
+			return 1;
+		} else if(dt2.before(dt1)) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
+
 }

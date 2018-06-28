@@ -15,7 +15,7 @@ import java.util.List;
  * @author Administrator
  *
  */
-	public class ChineseCompressUtil {
+public class ChineseCompressUtil {
 
 	/**
 	 * Format an Element to plain-text
@@ -29,7 +29,7 @@ import java.util.List;
 		FormattingVisitor formatter = new FormattingVisitor();
 		NodeTraversor traversor = new NodeTraversor(formatter);
 		traversor.traverse(element); // walk the DOM, and call .head() and
-		element.select("span,a,u,b,font,img,br").unwrap();
+		element.select("span,a,u,b,font,img,br,pre").unwrap();
 		String text = element.select("body").html().replaceAll("[　]*", "");
 		text = text.replaceAll("[ ]*", "");
 		text = text.replaceAll("\\n\\s*", "");
@@ -60,7 +60,6 @@ import java.util.List;
 						String attributeKey = attrs.get(k).getKey();
 						node.removeAttr(attributeKey);
 					}
-				//System.out.println("------------"+node.toString());
 			}
 
 
