@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silita.biaodaa.dao.NoticeRelationMapper">
+    <select id="querysLikeUrl" parameterType="Map" resultType="String">
+        SELECT id FROM mishu.snatchurl
+        WHERE source=#{source}
+        <if test="url!=null and url !=''">
+          AND url LIKE #{url}
+        </if>
+        <if test="urls!=null and urls.size()>0">
+            AND url in
+            <foreach collection="urls" item="url" separator="," open="(" close=")">
+              #{url}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="querySimilarityNotice" parameterType="Map" resultType="Map">
+      SELECT id,title
+      FROM
+      WHERE openDate BETWEEN DATE_SUB(#{openDate},INTERVAL #{dayRegion} DAY) AND DATE_SUB(#{openDate},INTERVAL -#{dayRegion} DAY)
+            <if test="tempTitle !=null and tempTitle!=''">
+                 AND title LIKE #{tempTitle}
+            </if>
+            <if test="websiteUrl !=null and websiteUrl!=''">
+                 AND url LIKE #{websiteUrl}
+            </if>
+      ORDER BY opendate DESC limit #{limitCount}
+    </select>
+
+
+</mapper>

@@ -7,7 +7,6 @@ import com.silita.biaodaa.common.redis.RedisClear;
 import com.silita.biaodaa.dao_temp.SnatchNoticeHuNanDao;
 import com.silita.biaodaa.disruptor.DisruptorOperator;
 import com.silita.biaodaa.service.SnatchService;
-import com.silita.biaodaa.utils.CNNumberFormat;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.MyStringUtils;
 import com.silita.biaodaa.utils.RouteUtils;
@@ -18,9 +17,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.silita.biaodaa.utils.RuleUtils.*;
 
 /**
  * Created by dh on 2018/3/14.
@@ -52,7 +55,7 @@ public abstract class HunanBaseRule {
             "澄清","流标","答疑","补疑","质疑","补充","补遗","暂停","入围", "资格预审","资审结果",
             "合同","结果","成交","成果","中选","比选","预审","谈判","磋商","询价","竞价","单一来源"};
 
-    protected static String[] keyWords3 = {"监理","代理","采购","勘察","设计"};
+    protected  static String[] keyWords3 = {"监理","代理","采购","勘察","设计"};
 
     protected static String[] keyWords4 = {"中标","修改","终止","废标","开标","变更","更正","调整","延期","推迟","延长",
             "澄清","流标","答疑","补疑","质疑","补充","补遗","暂停"};
@@ -197,30 +200,6 @@ public abstract class HunanBaseRule {
         return str;
     }
 
-    /**
-     * 按照标题顺序，返回第一个关键字的下标
-     * @param str
-     * @param keyWords 关键字数组
-     * @return
-     */
-    public int keyWordsIndex (String str , String[] keyWords) {
-        List<Integer> indexs = new ArrayList<Integer>();
-        for (int i = 0; i < keyWords.length; i++) {
-            int index = str.indexOf(keyWords[i]);
-            if (index != -1) {
-                indexs.add(index);
-            }
-        }
-
-        if (indexs.isEmpty()) {
-            return -1;
-        }
-
-        // 排序
-        Integer[] b =  indexs.toArray(new Integer[0]);
-        Arrays.sort(b);
-        return b[0];
-    }
 
     /**
      * 新进公告属性设置（入库时需要）
@@ -439,179 +418,6 @@ public abstract class HunanBaseRule {
         return false;
     }
 
-    /**
-     * 大写数字、阿拉伯数字、罗马数字统一转换为阿拉伯数字
-     * 若是英文，转换至大写英文
-     * @param str
-     * @return
-     */
-    public String getNumStr (String str) {
-        String regex = "[\\d一二三四五六七八九十ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]";
-        Pattern pa = Pattern.compile(regex);
-        Matcher ma = pa.matcher(str);
-        StringBuilder numStr = new StringBuilder();
-        while (ma.find()) {
-            numStr.append(ma.group());
-        }
-        if (MyStringUtils.isNull(numStr.toString())) {
-            String regex2 = "[A-Za-z]";
-            pa = Pattern.compile(regex2);
-            ma = pa.matcher(str);
-            while (ma.find()) {
-                numStr.append(ma.group());
-            }
-            return MyStringUtils.isNull(numStr.toString())?"":numStr.toString().toUpperCase();
-        }
-        return CNNumberFormat.numberFormat(numStr.toString());
-    }
-
-    /**
-     * 返回关键字下标
-     * 若存在多个关键字，返回-2
-     * 无关键字返回-1
-     * @param title
-     * @return
-     */
-    public int keyWords3IndexOf (String title) {
-        int a = -1;
-        int b = -1;
-        for (int i = 0; i < keyWords3.length; i++) {
-            if (title.contains(keyWords3[i])) {
-                a = i;
-                break;
-            }
-        }
-        if (a != -1) {
-            for (int i = keyWords3.length-1; i < keyWords3.length; i--) {
-                if (title.contains(keyWords3[i])) {
-                    b = i;
-                    break;
-                }
-            }
-        }
-        return a == b? a : -2;
-    }
-
-    /**
-     * 公告过滤
-     * @param searchResult
-     * @param notice
-     * @return
-     */
-    public List<Map<String,Object>> noticeFilter (List<Map<String,Object>> searchResult,EsNotice notice) {
-        // 数据过滤
-        logger.info("####  数据过滤 .. resultSize：" + searchResult.size() + "  ####");
-        String title = notice.getTitle();
-
-        // 标段过滤
-        if (searchResult.size() > 1) {
-            Iterator<Map<String,Object>> it = searchResult.iterator();
-            while (it.hasNext()){
-                String resultTitle = String.valueOf(it.next().get("title"));
-                if (title.contains("标段")) {
-                    if (!resultTitle.contains("标段")) {
-                        it.remove();
-                    }else {
-                        // 取出两个标题中的数字或英文
-                        String titleNumStr = null;
-                        if (title.lastIndexOf("标段") != -1) {
-                            titleNumStr = getNumStr(title.substring(0, title.lastIndexOf("标段")));
-                        } else {
-                            titleNumStr = getNumStr(title);
-                        }
-                        String resultTitleNumStr = null;
-                        if (resultTitle.lastIndexOf("标段") != -1) {
-                            resultTitleNumStr = getNumStr(resultTitle.substring(0, resultTitle.lastIndexOf("标段")));
-                        } else {
-                            resultTitleNumStr = getNumStr(resultTitle);
-                        }
-                        if (!titleNumStr.equals(resultTitleNumStr)) {
-                            // 俩个标题的数字或英文不一致
-                            it.remove();
-                        }
-                    }
-                } else if (resultTitle.contains("标段")) {
-                    // 新进公告没有标段，相关公告有标段
-                    it.remove();
-                }
-                logger.info("####  标段过滤 ..  resultSize：" + searchResult.size() + "  ####");
-            }
-        }
-
-        // 公告类型过滤
-        if (searchResult.size() > 1) {
-            Iterator<Map<String,Object>> it = searchResult.iterator();
-            while (it.hasNext()) {
-                String resultTitle = String.valueOf(it.next().get("title"));
-                if (keyWords3IndexOf(resultTitle) != keyWords3IndexOf(title)) {
-                    it.remove();
-                }
-            }
-            logger.info("####  公告类型过滤 ..  resultSize：" + searchResult.size() + "  ####");
-        }
-
-        // 项目次数过滤
-        if (searchResult.size() > 1) {
-            Iterator<Map<String,Object>> it = searchResult.iterator();
-            String regex = "(第).{1}?(次|批|包)";
-            Pattern pa = Pattern.compile(regex);
-            while (it.hasNext()) {
-                String resultTitle = String.valueOf(it.next().get("title"));
-                Matcher ma = pa.matcher(title);
-                if (ma.find()) {
-                    String sabi = ma.group();
-                    ma = pa.matcher(resultTitle);
-                    if (ma.find()) {
-                        // 新公告与历史公告都存在第几次字段
-                        int titleRegIndex = title.indexOf(sabi);
-                        int titleKeyIndex = keyWordsIndex(title, keyWords4);
-                        int historyTitleRegIndex = resultTitle.indexOf(sabi);
-                        int histotyTitleKeyIndex = keyWordsIndex(resultTitle, keyWords4);
-                        if (titleKeyIndex == -1 || titleKeyIndex > titleRegIndex) {
-                            // 新进公告没有关键字或关键字在相关字段前
-                            if (histotyTitleKeyIndex == -1 || histotyTitleKeyIndex > historyTitleRegIndex) {
-                            } else {it.remove();}
-                        } else {
-                            if (histotyTitleKeyIndex == -1 || histotyTitleKeyIndex > historyTitleRegIndex) {
-                                it.remove();
-                            }
-                        }
-                    } else {
-                        // 新公告存在第几次字段，历史公告无第几次字段,过滤掉
-                        it.remove();
-                    }
-                } else {
-                    // 新进公告无第几次字段，历史公告存在第几次字段，过滤掉
-                    ma = pa.matcher(resultTitle);
-                    if (ma.find()) {
-                        it.remove();
-                    }
-                }
-            }
-            logger.info("####  项目次数过滤 ..  historyNotices：" + searchResult.size() + "  ####");
-        }
-
-        // 括号内容过滤
-        if (searchResult.size() > 1) {
-            if (contaninsBracket(title)) {
-                int keyIndex = keyWordsIndex(title,keyWords5); // 获取第一个关键字的位置
-                if (keyIndex != -1) {
-                    String tempTitle = title.substring(0,keyIndex);
-                    if (contaninsBracket(tempTitle)) {
-                        Iterator<Map<String,Object>> it = searchResult.iterator();
-                        while (it.hasNext()) {
-                            String resultTitle = String.valueOf(it.next().get("title"));
-                            if (!compareBracketStr(tempTitle,resultTitle)) {
-                                it.remove();
-                            }
-                        }
-                    }
-                }
-            }
-            logger.info("####  括号内容过滤 .. resultSize: " + searchResult.size() + "  ####");
-        }
-        return searchResult;
-    }
 
 
     /**
@@ -657,7 +463,7 @@ public abstract class HunanBaseRule {
                         Iterator<EsNotice> it = historyNotices.iterator();
                         while (it.hasNext()) {
                             String historyTitle = it.next().getTitle();
-                            if (!compareBracketStr(tempTitle,historyTitle)) {
+                            if (!compareBracketStr(tempTitle,historyTitle,keyWords6)) {
                                 it.remove();
                             }
                         }
@@ -669,59 +475,8 @@ public abstract class HunanBaseRule {
         return historyNotices;
     }
 
-    /**
-     * 比较括号中的内容
-     * @param var1
-     * @param var2
-     * @return
-     */
-    public boolean compareBracketStr (String var1,String var2) {
-        var2 = var2.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]","");
-        boolean b = true;
-        int startIndex = -1;
-        int endIndex = -1;
-        char[] a = var1.toCharArray();
-        for (int i = 0; i < a.length; i++) {
-            if (a[i] == '(' || a[i] == '（') {
-                startIndex = i;
-            }
-            if (a[i] == ')' || a[i] == '）') {
-                endIndex = i;
-            }
-            if (startIndex != -1 && endIndex != -1) {
-                String key = var1.substring(startIndex + 1 , endIndex);
-                key = key.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]","");
-                startIndex = -1;
-                endIndex = -1;
-                if (keyWords6IndexOf(key) == -1) {
-                    continue;
-                }
-                b = var2.contains(key);
-                if (!b) {
-                    return b;
-                }
-            }
-        }
-        return b;
-    }
 
-    public int keyWords6IndexOf (String title) {
-        for (int i = 0; i < keyWords6.length; i++) {
-            if (title.contains(keyWords6[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
 
-    /**
-     * 是否存在括号
-     * @param str
-     * @return
-     */
-    public boolean contaninsBracket (String str) {
-        return (str.contains("(") && str.contains(")")) || (str.contains("（") && str.contains("）"));
-    }
 
     /**
      * 两条公告去重
