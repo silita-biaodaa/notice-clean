@@ -4,6 +4,7 @@ import com.silita.biaodaa.rules.Interface.RelationRule;
 import com.silita.biaodaa.service.NoticeRelationService;
 import com.silita.biaodaa.utils.ComputeResemble;
 import com.silita.biaodaa.utils.MyStringUtils;
+import com.silita.biaodaa.utils.RouteUtils;
 import com.silita.biaodaa.utils.RuleUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
@@ -37,42 +38,54 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
         return -1;
     }
 
-    @Override
-    public Map<String, String> executeRule(EsNotice esNotice) {
-        logger.info("湖南关联开始：[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
-        Map<String,String> map = new HashMap<String,String>();
-        List<String> relationList = new ArrayList<String>(); // 关联列表
-        int especIdx = especWebSite(esNotice.getUrl());
-        if (especIdx != -1) {
-            Map argMap = new HashMap<>();
-            logger.info("#####  启用张家界、邵阳、湘西、湘潭、长沙 公告关联规则！  #####");
-            String noticeUrl = esNotice.getUrl();
-            argMap.put("source",esNotice.getSource());
-            String urlKey = "";
-            if (especIdx < 3) {
-                // 张家界、邵阳、湘西
-                urlKey = noticeUrl.substring(noticeUrl.indexOf("&tpid=") + 6);
-                argMap.put("url","%"+urlKey+"%");
-                relationList = service.querysLikeUrl(argMap);
-            } else if (especIdx == 3) {
-                // 湘潭
-                urlKey = noticeUrl.substring(0,noticeUrl.lastIndexOf("?") + 1);
-                argMap.put("url","%"+urlKey+"%");
-                relationList = service.querysLikeUrl(argMap);
-            } else if (especIdx == 4) {
-                // 长沙
-                String relationUlrs = "";
-                if (esNotice.getDetail() != null && MyStringUtils.isNotNull(esNotice.getDetail().getRelationUrl())) {
-                    relationUlrs = esNotice.getDetail().getRelationUrl();
-                } else if (esNotice.getDetailZhongBiao() != null && MyStringUtils.isNotNull(esNotice.getDetailZhongBiao().getRelationUrl())) {
-                    relationUlrs = esNotice.getDetailZhongBiao().getRelationUrl();
-                }
-                if (relationUlrs.split(",").length > 1) {
-                    String[] relation_urls = relationUlrs.split(",");
-                    argMap.put("urls",Arrays.asList(relation_urls));
-                    relationList = service.querysLikeUrl(argMap);
-                }
+    private List<String>  specialSiteRel(int especIdx,EsNotice esNotice,Map argMap){
+        List<String> relationList  = null;
+        String urlKey = "";
+        String noticeUrl = esNotice.getUrl();
+        if (especIdx < 3) {
+            // 张家界、邵阳、湘西
+            urlKey = noticeUrl.substring(noticeUrl.indexOf("&tpid=") + 6);
+            argMap.put("url","%"+urlKey+"%");
+            relationList = service.querysLikeUrl(argMap);
+        } else if (especIdx == 3) {
+            // 湘潭
+            urlKey = noticeUrl.substring(0,noticeUrl.lastIndexOf("?") + 1);
+            argMap.put("url","%"+urlKey+"%");
+            relationList = service.querysLikeUrl(argMap);
+        } else if (especIdx == 4) {
+            // 长沙
+            String relationUlrs = "";
+            if (esNotice.getDetail() != null && MyStringUtils.isNotNull(esNotice.getDetail().getRelationUrl())) {
+                relationUlrs = esNotice.getDetail().getRelationUrl();
+            } else if (esNotice.getDetailZhongBiao() != null && MyStringUtils.isNotNull(esNotice.getDetailZhongBiao().getRelationUrl())) {
+                relationUlrs = esNotice.getDetailZhongBiao().getRelationUrl();
             }
+            if (relationUlrs.split(",").length > 1) {
+                String[] relation_urls = relationUlrs.split(",");
+                argMap.put("urls",Arrays.asList(relation_urls));
+                relationList = service.querysLikeUrl(argMap);
+            }
+        }
+        return relationList;
+    }
+
+    @Override
+    public Map<String, Object> executeRule(EsNotice esNotice) {
+        logger.info("湖南关联开始：[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+        String source = esNotice.getSource();
+        String snatchTabName = RouteUtils.routeTableName("mishu.snatchurl",source);
+        String noticeUrl = esNotice.getUrl();
+        Map argMap = new HashMap<>();
+        argMap.put("snatchTabName",snatchTabName);
+        argMap.put("source",source);
+        argMap.put("noticeUrl",noticeUrl);
+
+        Map<String,Object> map = new HashMap<String,Object>();
+        List<String> relationList = new ArrayList<String>(); // 关联列表
+        int especIdx = especWebSite(noticeUrl);
+        if (especIdx != -1) {
+            logger.info("#####  启用张家界、邵阳、湘西、湘潭、长沙 公告关联规则！  #####");
+            specialSiteRel(especIdx,esNotice,argMap);
         } else {
             // 通用关联规则
             logger.info("#####  启用通用关联规则！  #####");
@@ -84,13 +97,17 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
             tempTitle = replaceStrSymbol(tempTitle); // 替换符号空格为%，标题前后添加%
 //            logger.info("####  处理后的模糊匹配词：" + tempTitle + "  ####");
             String websiteUrl = MyStringUtils.parseWebSiteUrl(esNotice.getUrl());
-            List<Map<String,Object>> searchResult = service.querySimilarityNotice(esNotice.getOpenDate(),websiteUrl,tempTitle);
+            argMap.put("openDate",esNotice.getOpenDate());
+            argMap.put("websiteUrl",websiteUrl);
+            argMap.put("tempTitle",tempTitle);
+            List<Map<String,Object>> searchResult = service.querySimilarityNotice(argMap);
 
             Set<Map<String,Object>> set = new HashSet<Map<String,Object>>(searchResult);
 
             String title2 = clearKeyWord(title);
             // 增加相似度匹配的公告
-            List<Map<String,Object>> result2 = service.querySimilarityNotice(esNotice.getOpenDate(),websiteUrl,null);
+            argMap.put("tempTitle",null);
+            List<Map<String,Object>> result2 = service.querySimilarityNotice(argMap);
             for (Map<String,Object> mp : result2) { // 只保留与新进公告标题95%相似度以上的
                 String hstyTitle = clearKeyWord(String.valueOf(mp.get("title")));
                 if (ComputeResemble.similarDegreeWrapper(title2, hstyTitle) > 0.95) {
@@ -112,12 +129,12 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
 
         // 进行关联
         if (!relationList.isEmpty() && relationList.size() < 20 && relationList.size() > 1) {
-            String thisId = snatchNoticeHuNanDao.queryThisId(esNotice.getUrl(),esNotice.getSource());
+            String thisId = service.queryThisId(argMap);
             List<String> nextIdList = new ArrayList<String>();
             if (MyStringUtils.isNotNull(thisId)) {
                 for (String otherId : relationList) {
                     if (!otherId.equals(thisId)) {
-                        nextIdList.addAll(snatchNoticeHuNanDao.queryRelationNextIds(otherId));
+                        nextIdList.addAll(service.queryRelationNextIds(otherId));
                         nextIdList.add(otherId);
                     }
                 }
@@ -126,10 +143,12 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
                 nextIdList = new ArrayList<>(nextIdSet);
                 // 插入关联表
                 if (nextIdList.size() > 5) {
-                    map = snatchNoticeHuNanDao.batchInsertRelation(thisId,nextIdList);
+                    service.batchInsertRelation(thisId,nextIdList);
+                    map.put("mainId",thisId);
+                    map.put("nextId",nextIdList.get(nextIdList.size()-1));//原逻辑不合理，只取了最后一个id,消息推送待查找bug
                 } else {
                     for (String nextId:nextIdList) {
-                        snatchNoticeHuNanDao.insertSnatchRelation(thisId,nextId);
+                        service.insertSnatchRelation(thisId,nextId);
                         map.put("mainId",thisId);
                         map.put("nextId",nextId);
                     }

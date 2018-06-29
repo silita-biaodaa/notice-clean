@@ -8,5 +8,5 @@ import java.util.Map;
  * Created by dh on 2018/3/14.
  */
 public interface RelationRule{
-    Map<String, String> executeRule(EsNotice esNotice);
+    Map<String, Object> executeRule(EsNotice esNotice);
 }

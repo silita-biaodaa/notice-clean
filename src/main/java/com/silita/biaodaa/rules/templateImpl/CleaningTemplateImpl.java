@@ -48,7 +48,7 @@ public class CleaningTemplateImpl implements CleaningTemplate {
             logger.info(esNotice.getRedisId()+"####title:"+title+",开始执行关联。。。当前jvm内存用量："+startTotal+"MB");
             long startTime = System.currentTimeMillis();
 
-            Map<String,String> relationMap = relationRule.executeRule(esNotice);
+            Map<String,Object> relationMap = relationRule.executeRule(esNotice);
 
             double endTotal = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
             logger.info(esNotice.getRedisId()+"##### title:"+title+",关联结束，消耗时间："+( System.currentTimeMillis()-startTime)+"ms #####" +
