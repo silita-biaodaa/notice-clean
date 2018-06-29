@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silita.biaodaa.dao.ZhaobiaoAnalyzeDetailMapper" >
+
+  <insert id="insertZhaobiaoAnalyzeDetail" parameterType="com.snatch.model.AnalyzeDetail">
+      INSERT INTO
+      mishu.zhaobiao_analyze_detail(
+        `redisId`, `noticeUrl`, `title`, `tbAssureSum`, `projDq`,
+        `projXs`, `projSum`,`bmStartDate`,`bmEndDate`, `bmEndTime`,
+        `bmSite`,`kbSite`, `tbEndDate`, `tbEndTime`, `gsDate`,
+        `province`,`city`, `county`, `projType`, `zzRank`,
+        `pbMode`, `tbAssureEndDate`, `tbAssureEndTime`, `lyAssureSum`, `slProveSum`,
+        `assureEndDate`, `assureEndTime`, `zgCheckDate`, `kbStaffAsk`, `fileCost`,
+        `otherCost`, `zbName`, `zbContactMan`, `zbContactWay`, `dlContactMan`,
+        `dlContactWay`, `personRequest`, `shebaoRequest`, `yejiRequest`, `registrationForm`,
+        `projectTimeLimit`, `projectCompletionDate`, `supplementNoticeNumber`, `supplementNoticeReason`, `flowStandardFlag`,
+        `money`, `block`, `analyzeDate`
+      )
+      VALUES (
+        #{redisId}, #{noticeUrl}, #{title}, #{tbAssureSum}, #{projDq},
+        #{projXs}, #{projSum}, #{bmStartDate}, #{bmEndDate}, #{bmEndTime},
+        #{bmSite}, #{kbSite}, #{tbEndDate}, #{tbEndTime}, #{gsDate},
+        #{province}, #{city}, #{county}, #{projType}, #{zzRank},
+        #{pbMode}, #{tbAssureEndDate}, #{tbAssureEndTime}, #{lyAssureSum}, #{slProveSum},
+        #{assureEndDate}, #{assureEndTime}, #{zgCheckDate}, #{kbStaffAsk}, #{fileCost},
+        #{otherCost}, #{zbName}, #{zbContactMan}, #{zbContactWay}, #{dlContactMan},
+        #{dlContactWay}, #{personRequest}, #{shebaoRequest}, #{yejiRequest}, #{registrationForm},
+        #{projectTimeLimit}, #{projectCompletionDate}, #{supplementNoticeNumber}, #{supplementNoticeReason}, #{flowStandardFlag},
+        #{money}, #{block}, #{analyzeDate}
+      )
+  </insert>
+
+  <select id="getZhaobiaoAnalyzeDetailByUrl" parameterType="String" resultType="Integer">
+    SELECT COUNT(*) FROM mishu.zhaobiao_analyze_detail WHERE noticeUrl = #{noticeUrl}
+  </select>
+</mapper>

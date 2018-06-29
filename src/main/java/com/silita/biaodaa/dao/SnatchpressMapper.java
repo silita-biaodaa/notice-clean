@@ -2,11 +2,16 @@ package com.silita.biaodaa.dao;
 
 import com.silita.biaodaa.model.Snatchpress;
 import com.silita.biaodaa.utils.MyMapper;
-
 import java.util.List;
 import java.util.Map;
 
 public interface SnatchpressMapper extends MyMapper<Snatchpress> {
+
+    /**
+     *
+     * @param map
+     */
+    void insertSnatchPress(Map map);
 
     Snatchpress getSnatchpress(Integer id);
 
@@ -29,8 +34,6 @@ public interface SnatchpressMapper extends MyMapper<Snatchpress> {
     void insertSnatchUrlBuild(Map<String,Object> param);
 
     List<String> getBuildZh(Map<String,Object> param);
-
-
 
 
 }

@@ -3,10 +3,12 @@ package com.silita.biaodaa.rules.ruleImpl.hunan;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhongbiaoSnatch;
 import com.silita.biaodaa.rules.Interface.RepeatRule;
+import com.silita.biaodaa.service.INoticeCleanService;
 import com.silita.biaodaa.utils.ComputeResemble;
 import com.silita.biaodaa.utils.MyStringUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -23,14 +25,16 @@ import java.util.Set;
 public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
     private static Logger logger = Logger.getLogger(HunanRepeatRule.class);
 
+    @Autowired
+    INoticeCleanService noticeCleanService;
+
     @Override
     public boolean executeRule(EsNotice esNotice) {
         logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
         //url判断（已存在不入库）
         try {
-            String CountNoticeUrlSql = "SELECT COUNT(*) FROM mishu.snatchurl WHERE url = ? and openDate = ?";
-            int NoticeCount = snatchNoticeHuNanDao.queryForInt(CountNoticeUrlSql, new Object[]{esNotice.getUrl(), esNotice.getOpenDate()});
-            if (NoticeCount != 0) {
+            int isExist = noticeCleanService.countSnastchUrlByUrl(esNotice);
+            if (isExist != 0) {
                 logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + " ####");
                 return false;
             }
@@ -63,13 +67,15 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 }
 
                 // 标题模糊搜索公告
-                List<EsNotice> resultNotices = snatchNoticeHuNanDao.queryNoticeList(tempTitle, baseUri, esNotice);
+//                List<EsNotice> resultNotices = snatchNoticeHuNanDao.queryNoticeList(tempTitle, baseUri, esNotice);
+                List<EsNotice> resultNotices = noticeCleanService.listEsNotice(tempTitle, baseUri, esNotice);
 
                 // set去重
                 Set<EsNotice> esNotices = new HashSet<EsNotice>(resultNotices);
 
                 // 标题相似度搜索公告
-                List<EsNotice> result2 = snatchNoticeHuNanDao.queryNoticeList(baseUri, esNotice);
+//                List<EsNotice> result2 = snatchNoticeHuNanDao.queryNoticeList(baseUri, esNotice);
+                List<EsNotice> result2 = noticeCleanService.listEsNotice(baseUri, esNotice);
                 for (EsNotice no : result2) { // 只保留与新进公告标题80%相似度以上的
                     if (ComputeResemble.similarDegreeWrapper(title, no.getTitle()) > 0.8) {
                         esNotices.add(no);
@@ -106,7 +112,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                                 handleNotRepeat(esNotice);
                                 if (historyNotice.getRank() == 0) {
                                     //update历史公告 isshow = 1
-                                    snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(), 1, historyNotice.getSource());
+                                    noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, historyNotice.getSource());
+//                                    snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(), 1, historyNotice.getSource());
                                     // 删除es上的历史公告索引
                                     if (historyNotice.getType() == 2) {
                                         // 删除中标公告索引
@@ -121,12 +128,13 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                                     logger.info("@@@@  新公告入库，历史公告(省网)被去重 .. title：" + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
                                 } else {
                                     esNotice.setUuid(historyNotice.getUuid());
-                                    snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
-                                    snatchNoticeHuNanDao.deleteSnatchUrlById(historyNotice.getUuid());
+                                    noticeCleanService.insertSnatchurlRepetition(historyNotice);
+//                                    snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
+                                    noticeCleanService.deleteSnatchUrl(historyNotice.getUuid());
+//                                    snatchNoticeHuNanDao.deleteSnatchUrlById(historyNotice.getUuid());
 
                                     // 历史公告关联信息删除、编辑信息更改
                                     delRelationInfoAndEditDetail(esNotice, historyNotice);
-
 
                                     logger.info("@@@@  新公告入库，历史公告被去重 .. title: " + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
                                 }
@@ -136,7 +144,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                             if (esNoticeHasFile) {
                                 // 历史公告没附件，新进公告有附件,保留历史公告(新公告进去重表)
                                 esNotice.setUuid(historyNotice.getUuid());
-                                snatchNoticeHuNanDao.insertNoticeRepetition(esNotice);
+                                noticeCleanService.insertSnatchurlRepetition(esNotice);
+//                                snatchNoticeHuNanDao.insertNoticeRepetition(esNotice);
                                 logger.info("@@@@  新公告被历史公告去重 .. title: " + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
                                 return false;
                             } else {

@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.silita.biaodaa.dao.SnatchpressMapper" >
+<mapper namespace="com.silita.biaodaa.dao.SnatchpressMapper">
+  <insert id="insertSnatchPress" parameterType="Map">
+    INSERT INTO
+      ${snatchpressTable}(
+      press, snatchUrlId
+    )
+    VALUES(
+      #{press}, #{snatchUrlId}
+    )
+   </insert>
+
   <select id="getSnatchpress" parameterType="Integer" resultType="com.silita.biaodaa.model.Snatchpress">
     SELECT b.press FROM snatchpress b where b.snatchUrlId = #{id} limit 1
   </select>
