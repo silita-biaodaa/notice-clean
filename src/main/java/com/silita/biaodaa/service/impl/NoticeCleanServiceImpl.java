@@ -345,4 +345,44 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         snatchUrlCertMapper.updateSnatchurlCert(params);
     }
 
+    @Override
+    public void updateSnatchUrl(EsNotice esNotice, String uuid) {
+        Map params = new HashMap<String, Object>();
+        params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl",esNotice));
+        params.put("url", esNotice.getUrl());
+        params.put("title", esNotice.getTitle());
+        params.put("openDate", esNotice.getOpenDate());
+        params.put("province", esNotice.getProvince());
+        params.put("city", esNotice.getCity());
+
+        params.put("county", esNotice.getCounty());
+        params.put("rank", esNotice.getRank());
+        params.put("websitePlanId", esNotice.getWebsitePlanId());
+        params.put("uuid", esNotice.getUuid());
+        params.put("businessType", esNotice.getBusinessType());
+        params.put("otherType", esNotice.getOtherType());
+        params.put("redisId", esNotice.getRedisId());
+        params.put("source", esNotice.getSource());
+        params.put("id", uuid);
+        snatchurlMapper.updateSnatchUrl(params);
+    }
+
+    @Override
+    public void updateSnatchurlContent(EsNotice esNotice) {
+        Map params = new HashMap<String, Object>();
+        params.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent",esNotice));
+        params.put("content", esNotice.getContent());
+        params.put("snatchUrlId", esNotice.getUuid());
+        snatchurlcontentMapper.updateSnatchurlContent(params);
+    }
+
+    @Override
+    public void updateSnatchpress(EsNotice esNotice) {
+        Map params = new HashMap<String, Object>();
+        params.put("snatchpressTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
+        params.put("press", chineseCompressUtil.getPlainText(esNotice.getContent()));
+        params.put("snatchUrlId", esNotice.getUuid());
+        snatchpressMapper.updateSnatchpress(params);
+    }
+
 }

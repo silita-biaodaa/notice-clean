@@ -50,38 +50,38 @@ public abstract class HunanBaseRule {
 
     protected ChineseCompressUtil chineseCompressUtil = new ChineseCompressUtil();
 
-    protected static String[] normalUrl = {"www.zjjsggzy.gov.cn","www.sysggzy.com","ggzyjy.xxz.gov.cn","ggzy.xiangtan.gov.cn","csggzy.gov.cn"};
+    protected static String[] normalUrl = {"www.zjjsggzy.gov.cn", "www.sysggzy.com", "ggzyjy.xxz.gov.cn", "ggzy.xiangtan.gov.cn", "csggzy.gov.cn"};
 
-    protected static String[] keyWords1 = {"项目","施工","工程","标段","监理","代理","采购","勘察","设计"};
+    protected static String[] keyWords1 = {"项目", "施工", "工程", "标段", "监理", "代理", "采购", "勘察", "设计"};
 
-    protected static String[] keyWords2 = {"控制价","修改","终止","废标","开标","变更","更正","调整","延期","推迟","延长",
-            "澄清","流标","答疑","补疑","质疑","补充","补遗","暂停","入围", "资格预审","资审结果",
-            "合同","结果","成交","成果","中选","比选","预审","谈判","磋商","询价","竞价","单一来源"};
+    protected static String[] keyWords2 = {"控制价", "修改", "终止", "废标", "开标", "变更", "更正", "调整", "延期", "推迟", "延长",
+            "澄清", "流标", "答疑", "补疑", "质疑", "补充", "补遗", "暂停", "入围", "资格预审", "资审结果",
+            "合同", "结果", "成交", "成果", "中选", "比选", "预审", "谈判", "磋商", "询价", "竞价", "单一来源"};
 
-    protected  static String[] keyWords3 = {"监理","代理","采购","勘察","设计"};
+    protected static String[] keyWords3 = {"监理", "代理", "采购", "勘察", "设计"};
 
-    protected static String[] keyWords4 = {"中标","修改","终止","废标","开标","变更","更正","调整","延期","推迟","延长",
-            "澄清","流标","答疑","补疑","质疑","补充","补遗","暂停"};
+    protected static String[] keyWords4 = {"中标", "修改", "终止", "废标", "开标", "变更", "更正", "调整", "延期", "推迟", "延长",
+            "澄清", "流标", "答疑", "补疑", "质疑", "补充", "补遗", "暂停"};
 
-    protected static String[] keyWords5 = {"招标","中标","修改","终止","废标","开标","变更","更正","调整","延期","推迟","延长","澄清","流标","答疑",
-            "补疑","质疑","补充","补遗","暂停"};
+    protected static String[] keyWords5 = {"招标", "中标", "修改", "终止", "废标", "开标", "变更", "更正", "调整", "延期", "推迟", "延长", "澄清", "流标", "答疑",
+            "补疑", "质疑", "补充", "补遗", "暂停"};
 
-    protected static String[] keyWords6 = {"招标","中标","修改","终止","废标","开标","变更","更正","调整","延期","推迟","延长","澄清",
-            "流标","答疑","补疑","质疑","补充","补遗","暂停","通知","名称","其他","编号"};
+    protected static String[] keyWords6 = {"招标", "中标", "修改", "终止", "废标", "开标", "变更", "更正", "调整", "延期", "推迟", "延长", "澄清",
+            "流标", "答疑", "补疑", "质疑", "补充", "补遗", "暂停", "通知", "名称", "其他", "编号"};
 
-    protected static String[] keyWords7 = {"项目","施工","工程","标段","监理","代理","采购","勘察","设计","招标","中标","控制价","修改",
-            "终止","废标","开标","变更","更正","调整","延期","推迟","延长","澄清","流标","答疑","补疑","质疑","补充","补遗","暂停",
-            "入围","资格预审","资审结果","合同","结果","成交","成果","中选","比选","预审","谈判","磋商","询价","竞价","单一来源",
-            "公告","公示","关于","信息公示表","回复","候选人","信息"};
+    protected static String[] keyWords7 = {"项目", "施工", "工程", "标段", "监理", "代理", "采购", "勘察", "设计", "招标", "中标", "控制价", "修改",
+            "终止", "废标", "开标", "变更", "更正", "调整", "延期", "推迟", "延长", "澄清", "流标", "答疑", "补疑", "质疑", "补充", "补遗", "暂停",
+            "入围", "资格预审", "资审结果", "合同", "结果", "成交", "成果", "中选", "比选", "预审", "谈判", "磋商", "询价", "竞价", "单一来源",
+            "公告", "公示", "关于", "信息公示表", "回复", "候选人", "信息"};
 
     protected String[] mainWebside = {"ggzyjy.xxz.gov.cn", "ggzy.huaihua.gov.cn", "ggzy.yzcity.gov.cn", "czggzy.czs.gov.cn", "ggzy.yueyang.gov.cn", "sysggzy.com", "ggzy.xiangtan.gov.cn", "hyggzyjy.hengyang.gov.cn", "zzzyjy.cn", "ggzy.changde.gov.cn", "csx.gov.cn", "liuyang.gov.cn", "wangcheng.gov.cn", "61.186.94.156", "csggzy.gov.cn", "zjjsggzy.gov.cn", "ldggzy.hnloudi.gov.cn", "bidding.hunan.gov.cn", "jyzx.yiyang.gov.cn"};
 
-    public String clearKeyWord (String str) {
+    public String clearKeyWord(String str) {
         for (int i = 0; i < keyWords7.length; i++) {
             if (str.contains(keyWords7[i])) {
                 StringBuilder sb = new StringBuilder(str);
                 int a = str.indexOf(keyWords7[i]);
-                sb = sb.delete(a,a + keyWords7[i].length());
+                sb = sb.delete(a, a + keyWords7[i].length());
                 str = sb.toString();
             }
         }
@@ -90,10 +90,11 @@ public abstract class HunanBaseRule {
 
     /**
      * 判断公告是否为张家界、长沙、邵阳、湘西、湘潭
+     *
      * @param noticeUrl
      * @return
      */
-    public int urlIndexOf (String noticeUrl) {
+    public int urlIndexOf(String noticeUrl) {
         for (int i = 0; i < normalUrl.length; i++) {
             if (noticeUrl.contains(normalUrl[i])) {
                 return i;
@@ -104,16 +105,17 @@ public abstract class HunanBaseRule {
 
     /**
      * 替换标题中的空格与符号，标题前后添加%
+     *
      * @param title
      * @return
      */
-    public String replaceStrSymbol (String title) {
-        if(MyStringUtils.isNotNull(title)){
+    public String replaceStrSymbol(String title) {
+        if (MyStringUtils.isNotNull(title)) {
             // 标题中的空格符号替换为%
-            title = title.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]","%");
+            title = title.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]", "%");
 
             // 替换相关关键字为%
-            title = title.replaceAll("(招标|中标|项目|施工|工程)","%");
+            title = title.replaceAll("(招标|中标|项目|施工|工程)", "%");
 
             // 标题前后添加%
             if (title.charAt(0) != '%') {
@@ -128,11 +130,12 @@ public abstract class HunanBaseRule {
 
     /**
      * 判断字符串的所有字符是否都一样
+     *
      * @param str
      * @return
      */
-    public boolean allIsSameChars (String str) {
-        if(str!=null && str.length()>1) {
+    public boolean allIsSameChars(String str) {
+        if (str != null && str.length() > 1) {
             char a = str.charAt(0);
             for (int i = 1; i < str.length(); i++) {
                 if (str.charAt(i) != a) {
@@ -140,15 +143,15 @@ public abstract class HunanBaseRule {
                 }
             }
             return true;
-        }else{
+        } else {
             return true;
         }
     }
 
 
-
     /**
      * 标题关键字截取
+     *
      * @param title
      * @return
      */
@@ -159,31 +162,31 @@ public abstract class HunanBaseRule {
 
         // 一级关键字截取
         String[] rank1KeyWord = new String[3];
-        System.arraycopy(keyWords1,0,rank1KeyWord,0,rank1KeyWord.length);
-        int rank1KeyWordIndex = keyWordsIndex(title,rank1KeyWord);
+        System.arraycopy(keyWords1, 0, rank1KeyWord, 0, rank1KeyWord.length);
+        int rank1KeyWordIndex = keyWordsIndex(title, rank1KeyWord);
         if (rank1KeyWordIndex != -1) {
-            return title.substring(0,rank1KeyWordIndex);
+            return title.substring(0, rank1KeyWordIndex);
         }
 
         // 二级关键字截取
         String[] rank2KeyWord = new String[6];
-        System.arraycopy(keyWords1,3,rank2KeyWord,0,rank2KeyWord.length);
-        int rank2KeyWordIndex = keyWordsIndex(title,rank2KeyWord);
+        System.arraycopy(keyWords1, 3, rank2KeyWord, 0, rank2KeyWord.length);
+        int rank2KeyWordIndex = keyWordsIndex(title, rank2KeyWord);
         if (rank2KeyWordIndex != -1) {
-            return title.substring(0,rank2KeyWordIndex);
+            return title.substring(0, rank2KeyWordIndex);
         }
 
         // 三级关键字截取
-        String[] rank3KeyWord = {"招标","中标"};
-        int rank3KeyWordIndex = keyWordsIndex(title,rank3KeyWord);
+        String[] rank3KeyWord = {"招标", "中标"};
+        int rank3KeyWordIndex = keyWordsIndex(title, rank3KeyWord);
         if (rank3KeyWordIndex != -1) {
-            return title.substring(0,rank3KeyWordIndex);
+            return title.substring(0, rank3KeyWordIndex);
         }
 
         // 四级关键字截取
-        int rank4KeyWordIndex = keyWordsIndex(title,keyWords2);
+        int rank4KeyWordIndex = keyWordsIndex(title, keyWords2);
         if (rank4KeyWordIndex != -1 && !title.contains("维修改造")) {
-            return title.substring(0,rank4KeyWordIndex);
+            return title.substring(0, rank4KeyWordIndex);
         }
 
         // 截取 50% 的字符
@@ -192,20 +195,22 @@ public abstract class HunanBaseRule {
 
     /**
      * 截取中间一半的字符串
+     *
      * @param str
      * @return
      */
-    public String subHalfString (String str) {
+    public String subHalfString(String str) {
         int a = str.length() / 2;
         int b = a / 2;
         str = str.substring(b);
-        str = str.substring(0,str.length() - (a - b));
+        str = str.substring(0, str.length() - (a - b));
         return str;
     }
 
 
     /**
      * 新进公告属性设置（入库时需要）
+     *
      * @param notice
      * @return
      */
@@ -220,7 +225,7 @@ public abstract class HunanBaseRule {
 
         if (StringUtils.isNotBlank(businessType) && businessType.equals("0")) {
             businessType = "3";
-        }else {
+        } else {
             //判断公告是什么类型
             if (notice.getTitle().indexOf("设计") != -1) {
                 businessType = "1";
@@ -323,7 +328,7 @@ public abstract class HunanBaseRule {
         }
         if (notice.getType() == 2) {
             AnalyzeDetailZhongBiao detailZhongBiao = notice.getDetailZhongBiao();
-            if (detailZhongBiao == null){
+            if (detailZhongBiao == null) {
                 detailZhongBiao = new AnalyzeDetailZhongBiao();
             }
             detailZhongBiao.setGsDate(notice.getOpenDate());
@@ -341,6 +346,7 @@ public abstract class HunanBaseRule {
 
     /**
      * 招标、中标公告入库(无重复公告)
+     *
      * @param notice
      */
     public void handleNotRepeat(EsNotice notice) {
@@ -362,7 +368,7 @@ public abstract class HunanBaseRule {
 
         String source = notice.getSource();
         //仅湖南数据更新维度，资质与es
-        if(source.equals(Constant.HUNAN_SOURCE)) {
+        if (source.equals(Constant.HUNAN_SOURCE)) {
 //            if (notice.getType() == 2) {
 //                insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
 //            } else {
@@ -388,6 +394,7 @@ public abstract class HunanBaseRule {
 
     /**
      * 解析结果插入招标公告临时维度表
+     *
      * @param zhaobiaoDetail
      * @param notice
      */
@@ -400,6 +407,7 @@ public abstract class HunanBaseRule {
 
     /**
      * 解析结果插入中标公告临时维度表
+     *
      * @param zhongbiaoDetail
      * @param notice
      */
@@ -411,10 +419,11 @@ public abstract class HunanBaseRule {
 
     /**
      * 判断公告内容是否为附件
+     *
      * @param content
      * @return
      */
-    public boolean isHasFile (String content) {
+    public boolean isHasFile(String content) {
         String regex = "(href=\"|src=\"|href =\"|src =\"|href = \"|src = \").*?(zip|rar|7z|docx|doc|jpg|jpeg|png|ppt|xls|wps|xlsx)";
         Pattern pa = Pattern.compile(regex);
         Matcher ma = pa.matcher(content);
@@ -428,10 +437,10 @@ public abstract class HunanBaseRule {
     }
 
 
-
     /**
      * 公告过滤
-     * @param notice 新进公告
+     *
+     * @param notice         新进公告
      * @param historyNotices 历史公告
      */
     public List<EsNotice> noticeFilter(EsNotice notice, List<EsNotice> historyNotices) {
@@ -450,8 +459,8 @@ public abstract class HunanBaseRule {
                     }
                     int titleBiaoduanIndex = title.lastIndexOf("标段");
                     int historyBiaoduanIndex = historyTitle.lastIndexOf("标段");
-                    String titleNumStr = getNumStr(title.substring(0,titleBiaoduanIndex));
-                    String historyTitleNumStr = getNumStr(historyTitle.substring(0,historyBiaoduanIndex));
+                    String titleNumStr = getNumStr(title.substring(0, titleBiaoduanIndex));
+                    String historyTitleNumStr = getNumStr(historyTitle.substring(0, historyBiaoduanIndex));
                     if (!titleNumStr.equals(historyTitleNumStr)) {
                         it.remove();
                     }
@@ -465,14 +474,14 @@ public abstract class HunanBaseRule {
         // 括号内容过滤
         if (!historyNotices.isEmpty()) {
             if (contaninsBracket(title)) {
-                int keyIndex = keyWordsIndex(title,keyWords5); // 获取第一个关键字的位置
+                int keyIndex = keyWordsIndex(title, keyWords5); // 获取第一个关键字的位置
                 if (keyIndex != -1) {
-                    String tempTitle = title.substring(0,keyIndex);
+                    String tempTitle = title.substring(0, keyIndex);
                     if (contaninsBracket(tempTitle)) {
                         Iterator<EsNotice> it = historyNotices.iterator();
                         while (it.hasNext()) {
                             String historyTitle = it.next().getTitle();
-                            if (!compareBracketStr(tempTitle,historyTitle,keyWords6)) {
+                            if (!compareBracketStr(tempTitle, historyTitle, keyWords6)) {
                                 it.remove();
                             }
                         }
@@ -485,13 +494,12 @@ public abstract class HunanBaseRule {
     }
 
 
-
-
     /**
      * 两条公告去重
+     *
      * @param notice
      */
-    public boolean handleRepeat (EsNotice notice, EsNotice historyNotice) {
+    public boolean handleRepeat(EsNotice notice, EsNotice historyNotice) {
         if (notice.getRank() == 0 && historyNotice.getRank() != 0) {
             // 插入新进公告(省网)，isshow = 1
             notice.setIsShow(1);
@@ -507,7 +515,7 @@ public abstract class HunanBaseRule {
             //插入公告内容
             noticeCleanService.insertSnatchContent(notice, id);
             noticeCleanService.insertSnatchPress(notice, id);
-            logger.info("@@@@  新公告(省网)被去重 .. [redisId:"+notice.getRedisId()+"]title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
+            logger.info("@@@@  新公告(省网)被去重 .. [redisId:" + notice.getRedisId() + "]title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return false;
         }
 
@@ -515,9 +523,10 @@ public abstract class HunanBaseRule {
             // 插入新进公告，历史公告isshow = 1
             notice.setEdit(historyNotice.getEdit());
             handleNotRepeat(notice);
-            snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(),1,notice.getSource());
+//            snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(),1,notice.getSource());
+            noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
 
-            if(historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
+            if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
                 // 删除es上的历史公告索引
                 if (historyNotice.getType() == 2) {
                     // 删除中标公告索引
@@ -529,7 +538,7 @@ public abstract class HunanBaseRule {
             }
 
             // 历史公告关联信息删除、编辑信息更改
-            delRelationInfoAndEditDetail(notice,historyNotice);
+            delRelationInfoAndEditDetail(notice, historyNotice);
 
             logger.info("@@@@  新公告入库，历史公告(省网)被去重 .. title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return true;
@@ -543,13 +552,20 @@ public abstract class HunanBaseRule {
             notice.setUuid(historyNotice.getUuid());
             notice.setEdit(historyNotice.getEdit());
 
-            snatchNoticeHuNanDao.updateSnatchurlNotice(notice, historyNotice.getUuid());
-            snatchNoticeHuNanDao.updateSnatchContent(notice);
-            snatchNoticeHuNanDao.updateSnatchPress(notice);
+//            snatchNoticeHuNanDao.updateSnatchurlNotice(notice, historyNotice.getUuid());
+//            snatchNoticeHuNanDao.updateSnatchContent(notice);
+//            snatchNoticeHuNanDao.updateSnatchPress(notice);
 
-            snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
+            //更新基本表
+            noticeCleanService.updateSnatchUrl(notice, historyNotice.getUuid());
+            //更新内容
+            noticeCleanService.updateSnatchurlContent(notice);
+            noticeCleanService.updateSnatchpress(notice);
+
+//            snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
+            noticeCleanService.insertSnatchurlRepetition(historyNotice);
             //仅湖南数据处理es
-            if (notice.getSource().equals(Constant.HUNAN_SOURCE)){
+            if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
                 if (notice.getType() == 2) { //中标
                     try {
                         snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
@@ -564,7 +580,7 @@ public abstract class HunanBaseRule {
                     }
                 }
                 // 历史公告关联信息删除、编辑信息更改
-                delRelationInfoAndEditDetail(notice,historyNotice);
+                delRelationInfoAndEditDetail(notice, historyNotice);
             }
             logger.info("@@@@  新公告替换历史公告 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return true;
@@ -573,7 +589,8 @@ public abstract class HunanBaseRule {
         if (notice.getRank() == 2 && historyNotice.getRank() == 1) {
             // 新公告进去重表
             notice.setUuid(historyNotice.getUuid());
-            snatchNoticeHuNanDao.insertNoticeRepetition(notice);
+//            snatchNoticeHuNanDao.insertNoticeRepetition(notice);
+            noticeCleanService.insertSnatchurlRepetition(historyNotice);
             logger.info("@@@@  新公告被历史公告去重 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return false;
         }
@@ -585,23 +602,26 @@ public abstract class HunanBaseRule {
 
     /**
      * 去除指定字符（只去除第一个）
+     *
      * @param c
      * @param str
      * @return
      */
-    public String clearStrOnlyOne (String c, String str) {
+    public String clearStrOnlyOne(String c, String str) {
         StringBuilder sb = new StringBuilder(str);
         if (str.contains(c) && sb.indexOf(c) != -1) {
-            sb.delete(sb.indexOf(c),sb.indexOf(c) + c.length());
+            sb.delete(sb.indexOf(c), sb.indexOf(c) + c.length());
         }
         return sb.toString();
     }
+
     /**
      * 历史公告关联信息删除、编辑信息更改
+     *
      * @param notice
      * @param historyNotice
      */
-    public void delRelationInfoAndEditDetail (EsNotice notice, EsNotice historyNotice) {
+    public void delRelationInfoAndEditDetail(EsNotice notice, EsNotice historyNotice) {
 //        snatchNoticeHuNanDao.deleteRelationInfo(Integer.valueOf(historyNotice.getUuid()));
 //        redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
 //        int noticeId = snatchNoticeHuNanDao.queryForInt("SELECT id FROM "+RouteUtils.routeTableName("mishu.snatchurl",notice)+" WHERE url = ? ",new Object[]{notice.getUrl()});

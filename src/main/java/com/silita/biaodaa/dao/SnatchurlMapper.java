@@ -52,5 +52,11 @@ public interface SnatchurlMapper {
      */
     Integer getSnatchurlIdByUrl(Map map);
 
+    /**
+     *
+     * @param map
+     */
+    void updateSnatchUrl(Map map);
+
 
 }

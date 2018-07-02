@@ -11,6 +11,11 @@
     )
    </insert>
 
+  <update id="updateSnatchpress" parameterType="Map">
+      UPDATE ${snatchpressTable}
+      SET press = #{press}, snatchUrlId = #{snatchUrlId}
+  </update>
+
   <select id="getSnatchpress" parameterType="Integer" resultType="com.silita.biaodaa.model.Snatchpress">
     SELECT b.press FROM snatchpress b where b.snatchUrlId = #{id} limit 1
   </select>

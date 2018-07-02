@@ -67,4 +67,14 @@
     <select id="getSnatchurlIdByUrl" parameterType="Map" resultType="Integer">
         SELECT id FROM ${snatchurlTable} WHERE url = #{url}
     </select>
+
+    <update id="updateSnatchUrl" parameterType="Map">
+        UPDATE FROM ${snatchurlTable}
+        SET url = #{url}, title = #{title}, openDate = #{openDate}, province = #{province}, city = #{city},
+        county = #{county}, rank = #{rank}, websitePlanId = #{websitePlanId}, uuid = #{uuid}, businessType = #{businessType},
+        changeNum = changeNum + 1, otherType = #{otherType}, snatchDateTime = NOW(), redisId = #{redisId}, source = #{source}
+        WHERE id = #{id}
+    </update>
+
+
 </mapper>

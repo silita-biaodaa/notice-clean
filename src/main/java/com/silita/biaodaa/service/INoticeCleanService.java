@@ -103,4 +103,23 @@ public interface INoticeCleanService {
      * @param historyId
      */
     void updateSnatchUrlCert(Integer id, Integer historyId);
+
+    /**
+     *
+     * @param esNotice
+     * @param uuid
+     */
+    void updateSnatchUrl(EsNotice esNotice, String uuid);
+
+    /**
+     *
+     * @param notice
+     */
+    void updateSnatchurlContent(EsNotice notice);
+
+    /**
+     *
+     * @param notice
+     */
+    void updateSnatchpress(EsNotice notice);
 }

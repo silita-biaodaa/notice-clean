@@ -13,6 +13,12 @@ public interface SnatchpressMapper extends MyMapper<Snatchpress> {
      */
     void insertSnatchPress(Map map);
 
+    /**
+     *
+     * @param map
+     */
+    void updateSnatchpress(Map map);
+
     Snatchpress getSnatchpress(Integer id);
 
     List<Map<String, Object>> queryzh();

@@ -10,4 +10,10 @@
           #{content}, #{snatchUrlId}
         )
     </insert>
+
+    <update id="updateSnatchurlContent" parameterType="Map">
+        UPDATE FROM ${snatchUrlContentTable}
+        SET content = #{content}
+        WHERE snatchUrlId = #{snatchUrlId}
+    </update>
 </mapper>
