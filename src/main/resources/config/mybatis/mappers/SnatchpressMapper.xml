@@ -27,7 +27,7 @@
     (#{contId},#{certificate},#{certificateUUid},#{type},#{licence})
   </insert>
 
-  <select id="getBuildZhList" parameterType="Map">
+  <select id="getBuildZhList" parameterType="Map" resultType="Map">
     SELECT `name`,mainUUid,rank FROM build_zh
   </select>
 
