@@ -39,7 +39,7 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
     }
 
     private List<String>  specialSiteRel(int especIdx,EsNotice esNotice,Map argMap){
-        List<String> relationList  = null;
+        List<String> relationList  = new ArrayList<String>();
         String urlKey = "";
         String noticeUrl = esNotice.getUrl();
         if (especIdx < 3) {
@@ -69,6 +69,53 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
         return relationList;
     }
 
+    /**
+     * 通用关联规则
+     * @param esNotice
+     * @param argMap
+     * @return
+     */
+    private List<String>  normalRule(EsNotice esNotice,Map argMap){
+        List<String> relationList  = new ArrayList<String>();
+        logger.info("#####  启用通用关联规则！  #####");
+        String title = esNotice.getTitle();
+        logger.info("####  新进公告Title：" + title +"  ####");
+
+        // 公告标题处理后进行模糊搜索
+        String tempTitle = title.length() < 10 ? title : subSearchTitle(title);
+        tempTitle = replaceStrSymbol(tempTitle); // 替换符号空格为%，标题前后添加%
+//            logger.info("####  处理后的模糊匹配词：" + tempTitle + "  ####");
+        String websiteUrl = MyStringUtils.parseWebSiteUrl(esNotice.getUrl());
+        argMap.put("openDate",esNotice.getOpenDate());
+        argMap.put("websiteUrl",websiteUrl);
+        argMap.put("tempTitle",tempTitle);
+        List<Map<String,Object>> searchResult = service.querySimilarityNotice(argMap);
+
+        Set<Map<String,Object>> set = new HashSet<Map<String,Object>>(searchResult);
+
+        String title2 = clearKeyWord(title);
+        // 增加相似度匹配的公告
+        argMap.put("tempTitle",null);
+        List<Map<String,Object>> result2 = service.querySimilarityNotice(argMap);
+        for (Map<String,Object> mp : result2) { // 只保留与新进公告标题95%相似度以上的
+            String hstyTitle = clearKeyWord(String.valueOf(mp.get("title")));
+            if (ComputeResemble.similarDegreeWrapper(title2, hstyTitle) > 0.95) {
+                set.add(mp);
+            }
+        }
+
+        searchResult = new ArrayList<Map<String,Object>>(set);
+//            logger.info("#### 模糊匹配  .. resultSize：" + searchResult.size() + "  ####");
+        // 数据过滤
+        if (!searchResult.isEmpty() && searchResult.size() > 1) { // size为 1 ，无相关公告
+            searchResult = noticeFilter(searchResult,esNotice);
+        }
+        for (Map<String,Object> m : searchResult) {
+            relationList.add(String.valueOf(m.get("id")));
+        }
+        return relationList;
+    }
+
     @Override
     public Map<String, Object> executeRule(EsNotice esNotice) {
         logger.info("湖南关联开始：[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
@@ -81,54 +128,19 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
         argMap.put("noticeUrl",noticeUrl);
 
         Map<String,Object> map = new HashMap<String,Object>();
-        List<String> relationList = new ArrayList<String>(); // 关联列表
+        List<String> relationList = null; // 关联列表
         int especIdx = especWebSite(noticeUrl);
         if (especIdx != -1) {
             logger.info("#####  启用张家界、邵阳、湘西、湘潭、长沙 公告关联规则！  #####");
-            specialSiteRel(especIdx,esNotice,argMap);
+            relationList = specialSiteRel(especIdx,esNotice,argMap);
         } else {
             // 通用关联规则
-            logger.info("#####  启用通用关联规则！  #####");
-            String title = esNotice.getTitle();
-            logger.info("####  新进公告Title：" + title +"  ####");
-
-            // 公告标题处理后进行模糊搜索
-            String tempTitle = title.length() < 10 ? title : subSearchTitle(title);
-            tempTitle = replaceStrSymbol(tempTitle); // 替换符号空格为%，标题前后添加%
-//            logger.info("####  处理后的模糊匹配词：" + tempTitle + "  ####");
-            String websiteUrl = MyStringUtils.parseWebSiteUrl(esNotice.getUrl());
-            argMap.put("openDate",esNotice.getOpenDate());
-            argMap.put("websiteUrl",websiteUrl);
-            argMap.put("tempTitle",tempTitle);
-            List<Map<String,Object>> searchResult = service.querySimilarityNotice(argMap);
-
-            Set<Map<String,Object>> set = new HashSet<Map<String,Object>>(searchResult);
-
-            String title2 = clearKeyWord(title);
-            // 增加相似度匹配的公告
-            argMap.put("tempTitle",null);
-            List<Map<String,Object>> result2 = service.querySimilarityNotice(argMap);
-            for (Map<String,Object> mp : result2) { // 只保留与新进公告标题95%相似度以上的
-                String hstyTitle = clearKeyWord(String.valueOf(mp.get("title")));
-                if (ComputeResemble.similarDegreeWrapper(title2, hstyTitle) > 0.95) {
-                    set.add(mp);
-                }
-            }
-
-            searchResult = new ArrayList<Map<String,Object>>(set);
-//            logger.info("#### 模糊匹配  .. resultSize：" + searchResult.size() + "  ####");
-            // 数据过滤
-            if (!searchResult.isEmpty() && searchResult.size() > 1) { // size为 1 ，无相关公告
-                searchResult = noticeFilter(searchResult,esNotice);
-            }
-            for (Map<String,Object> m : searchResult) {
-                relationList.add(String.valueOf(m.get("id")));
-            }
+            relationList = normalRule(esNotice,argMap);
         }
         logger.info("#####  关联条数：" + relationList.size() + "  #####");
 
         // 进行关联
-        if (!relationList.isEmpty() && relationList.size() < 20 && relationList.size() > 1) {
+        if (!relationList.isEmpty() && relationList.size() > 1 && relationList.size() < 20 ) {
             String thisId = service.queryThisId(argMap);
             List<String> nextIdList = new ArrayList<String>();
             if (MyStringUtils.isNotNull(thisId)) {
