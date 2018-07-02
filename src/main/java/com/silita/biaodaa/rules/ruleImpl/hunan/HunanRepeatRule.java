@@ -66,14 +66,12 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 }
 
                 // 标题模糊搜索公告
-//                List<EsNotice> resultNotices = snatchNoticeHuNanDao.queryNoticeList(tempTitle, baseUri, esNotice);
                 List<EsNotice> resultNotices = noticeCleanService.listEsNotice(tempTitle, baseUri, esNotice);
 
                 // set去重
                 Set<EsNotice> esNotices = new HashSet<EsNotice>(resultNotices);
 
                 // 标题相似度搜索公告
-//                List<EsNotice> result2 = snatchNoticeHuNanDao.queryNoticeList(baseUri, esNotice);
                 List<EsNotice> result2 = noticeCleanService.listEsNotice(baseUri, esNotice);
                 for (EsNotice no : result2) { // 只保留与新进公告标题80%相似度以上的
                     if (ComputeResemble.similarDegreeWrapper(title, no.getTitle()) > 0.8) {
@@ -128,9 +126,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                                 } else {
                                     esNotice.setUuid(historyNotice.getUuid());
                                     noticeCleanService.insertSnatchurlRepetition(historyNotice);
-//                                    snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
                                     noticeCleanService.deleteSnatchUrl(historyNotice.getUuid());
-//                                    snatchNoticeHuNanDao.deleteSnatchUrlById(historyNotice.getUuid());
 
                                     // 历史公告关联信息删除、编辑信息更改
                                     delRelationInfoAndEditDetail(esNotice, historyNotice);
@@ -144,7 +140,6 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                                 // 历史公告没附件，新进公告有附件,保留历史公告(新公告进去重表)
                                 esNotice.setUuid(historyNotice.getUuid());
                                 noticeCleanService.insertSnatchurlRepetition(esNotice);
-//                                snatchNoticeHuNanDao.insertNoticeRepetition(esNotice);
                                 logger.info("@@@@  新公告被历史公告去重 .. title: " + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
                                 return false;
                             } else {

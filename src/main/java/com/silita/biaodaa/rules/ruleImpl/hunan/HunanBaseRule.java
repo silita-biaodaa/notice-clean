@@ -351,10 +351,6 @@ public abstract class HunanBaseRule {
      */
     public void handleNotRepeat(EsNotice notice) {
         setNoticeAttribute(notice);
-//        Map<String, String> map = snatchNoticeHuNanDao.insertNotice(notice);//插入公告内容以及url表
-        //插入公告内容以及url表
-//        Map<String, String> map = noticeCleanService.insertNotice(notice);
-
         //插入公告基本信息
         noticeCleanService.insertSnatchUrl(notice);
         Integer id = noticeCleanService.getMaxSnatchUrlIdByUrl(notice);
@@ -369,11 +365,6 @@ public abstract class HunanBaseRule {
         String source = notice.getSource();
         //仅湖南数据更新维度，资质与es
         if (source.equals(Constant.HUNAN_SOURCE)) {
-//            if (notice.getType() == 2) {
-//                insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
-//            } else {
-//                insertZhaobiaoAnalyzeDetail(notice.getDetail(), notice);
-//            }
             // 插入维度信息
             noticeCleanService.insertDetail(notice);
 
@@ -503,12 +494,6 @@ public abstract class HunanBaseRule {
         if (notice.getRank() == 0 && historyNotice.getRank() != 0) {
             // 插入新进公告(省网)，isshow = 1
             notice.setIsShow(1);
-//            snatchNoticeHuNanDao.insertNewUrl(notice);
-            // 插入公告内容
-//            int id = snatchNoticeHuNanDao.queryForInt("select max(id) from "+ RouteUtils.routeTableName("mishu.snatchurl",notice)+" where url=?", new Object[]{notice.getUrl()});
-//            snatchNoticeHuNanDao.insertSnatchContent(id, notice);
-//            snatchNoticeHuNanDao.insertCompress(notice, Long.valueOf((id)));//插入整理后的文档,去掉内容中有重复标题
-//            snatchNoticeHuNanDao.updateSnatchurlStatus(id,notice.getSource());
             //插入公告基本信息
             noticeCleanService.insertSnatchUrl(notice);
             Integer id = noticeCleanService.getMaxSnatchUrlIdByUrl(notice);
@@ -523,7 +508,6 @@ public abstract class HunanBaseRule {
             // 插入新进公告，历史公告isshow = 1
             notice.setEdit(historyNotice.getEdit());
             handleNotRepeat(notice);
-//            snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(),1,notice.getSource());
             noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
 
             if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
@@ -552,17 +536,12 @@ public abstract class HunanBaseRule {
             notice.setUuid(historyNotice.getUuid());
             notice.setEdit(historyNotice.getEdit());
 
-//            snatchNoticeHuNanDao.updateSnatchurlNotice(notice, historyNotice.getUuid());
-//            snatchNoticeHuNanDao.updateSnatchContent(notice);
-//            snatchNoticeHuNanDao.updateSnatchPress(notice);
-
             //更新基本表
             noticeCleanService.updateSnatchUrl(notice, historyNotice.getUuid());
             //更新内容
             noticeCleanService.updateSnatchurlContent(notice);
             noticeCleanService.updateSnatchpress(notice);
 
-//            snatchNoticeHuNanDao.insertNoticeRepetition(historyNotice);
             noticeCleanService.insertSnatchurlRepetition(historyNotice);
             //仅湖南数据处理es
             if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
@@ -589,7 +568,6 @@ public abstract class HunanBaseRule {
         if (notice.getRank() == 2 && historyNotice.getRank() == 1) {
             // 新公告进去重表
             notice.setUuid(historyNotice.getUuid());
-//            snatchNoticeHuNanDao.insertNoticeRepetition(notice);
             noticeCleanService.insertSnatchurlRepetition(historyNotice);
             logger.info("@@@@  新公告被历史公告去重 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return false;
@@ -622,22 +600,10 @@ public abstract class HunanBaseRule {
      * @param historyNotice
      */
     public void delRelationInfoAndEditDetail(EsNotice notice, EsNotice historyNotice) {
-//        snatchNoticeHuNanDao.deleteRelationInfo(Integer.valueOf(historyNotice.getUuid()));
-//        redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
-//        int noticeId = snatchNoticeHuNanDao.queryForInt("SELECT id FROM "+RouteUtils.routeTableName("mishu.snatchurl",notice)+" WHERE url = ? ",new Object[]{notice.getUrl()});
-//        // 编辑信息修改
-//        if (historyNotice.getEdit() == 1) { // 已编辑
-//            if (historyNotice.getType() == 2) { // 中标
-//                snatchNoticeHuNanDao.editZhongbiaoDetail(noticeId,Integer.valueOf(historyNotice.getUuid()));
-//            } else {
-//                snatchNoticeHuNanDao.editZhaobiaoDetail(noticeId,Integer.valueOf(historyNotice.getUuid()));
-//            }
-//        }
         redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
         int noticeId = noticeCleanService.deleteRepetitionAndUpdateDetail(notice, historyNotice);
         // 资质信息修改
         noticeCleanService.updateSnatchUrlCert(noticeId, Integer.valueOf(historyNotice.getUuid()));
-//        snatchNoticeHuNanDao.updateSnatchUrlCert(noticeId,Integer.valueOf(historyNotice.getUuid()));
     }
 
 }

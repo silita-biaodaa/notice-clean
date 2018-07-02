@@ -10,6 +10,7 @@ import com.silita.biaodaa.utils.RouteUtils;
 import com.snatch.model.AnalyzeDetail;
 import com.snatch.model.AnalyzeDetailZhongBiao;
 import com.snatch.model.EsNotice;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,8 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
     private ZhongbiaoDetailMapper zhongbiaoDetailMapper;
     @Autowired
     private SnatchUrlCertMapper snatchUrlCertMapper;
+
+    private Logger logger = Logger.getLogger(NoticeCleanServiceImpl.class);
 
     ChineseCompressUtil chineseCompressUtil = new ChineseCompressUtil();
     SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM-dd");
@@ -277,6 +280,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         snatchurlParams.put("isShow", esNotice.getIsShow() == null ? 0 : esNotice.getIsShow());
         //添加公告基本信息
         snatchurlMapper.insertSnatchUrl(snatchurlParams);
+        logger.info("########新插入公告：[source:"+esNotice.getSource()+"][isShow:"+esNotice.getIsShow()+"][title:"+esNotice.getTitle()+"][redis:"+esNotice.getRedisId()+"][type:"+esNotice.getType()+"][url:"+esNotice.getUrl()+"]");
     }
 
     @Override
