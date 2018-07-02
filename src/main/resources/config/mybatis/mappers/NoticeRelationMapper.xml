@@ -33,7 +33,7 @@
     <select id="queryThisId" parameterType="Map" resultType="String">
         SELECT max(id)
         FROM ${snatchTabName}
-        WHERE url = #{url}
+        WHERE url = #{noticeUrl}
     </select>
 
     <select id="queryRelationNextIds" parameterType="String" resultType="String">
@@ -47,14 +47,14 @@
         (mainId, nextId, lastChangeTime,relationMethod)
         VALUES
         <foreach collection="nextIds" item="nextId" separator=",">
-        (#thisId,#nextId,NOW(),0)
+        (#{thisId},#{nextId},NOW(),0)
         </foreach>
     </insert>
 
     <insert id="insertSnatchRelation" parameterType="Map">
         INSERT INTO mishu.snatchrelation
         (mainId, nextId, lastChangeTime,relationMethod)
-        VALUES(#thisId,#nextId,NOW(),0)
+        VALUES(#{thisId},#{nextId},NOW(),0)
     </insert>
 
 </mapper>
