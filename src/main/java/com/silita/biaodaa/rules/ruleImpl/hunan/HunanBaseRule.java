@@ -613,6 +613,7 @@ public abstract class HunanBaseRule {
 //                snatchNoticeHuNanDao.editZhaobiaoDetail(noticeId,Integer.valueOf(historyNotice.getUuid()));
 //            }
 //        }
+        redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
         int noticeId = noticeCleanService.deleteRepetitionAndUpdateDetail(notice, historyNotice);
         // 资质信息修改
         noticeCleanService.updateSnatchUrlCert(noticeId, Integer.valueOf(historyNotice.getUuid()));

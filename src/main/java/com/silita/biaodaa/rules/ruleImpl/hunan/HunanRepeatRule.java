@@ -31,16 +31,15 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
     @Override
     public boolean executeRule(EsNotice esNotice) {
         logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
-        //url判断（已存在不入库）
         try {
             int isExist = noticeCleanService.countSnastchUrlByUrl(esNotice);
+            //url判断（已存在不入库）
             if (isExist != 0) {
                 logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + " ####");
                 return false;
             }
 
             String title = esNotice.getTitle();
-
             // 截取模糊匹配关键字
             String tempTitle = subSearchTitle(title);
 

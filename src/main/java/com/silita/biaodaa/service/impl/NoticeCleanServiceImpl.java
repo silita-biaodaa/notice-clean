@@ -1,7 +1,6 @@
 package com.silita.biaodaa.service.impl;
 
 import com.fasterxml.jackson.databind.util.ObjectIdMap;
-import com.silita.biaodaa.common.redis.RedisClear;
 import com.silita.biaodaa.dao.*;
 import com.silita.biaodaa.model.SnatchUrl;
 import com.silita.biaodaa.model.SnatchurlRepetition;
@@ -23,8 +22,6 @@ import java.util.Map;
 @Service("noticeCleanService")
 public class NoticeCleanServiceImpl implements INoticeCleanService {
 
-    @Autowired
-    protected RedisClear redisClear;
     @Autowired
     private SnatchurlMapper snatchurlMapper;
     @Autowired
@@ -160,8 +157,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
     @Override
     public int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice) {
         snatchurlRepetitionMapper.deleteSnatchurlRepetition(Long.valueOf(historyNotice.getUuid()));
-        //清理公告关联信息缓存
-        redisClear.clearGonggaoRelation(historyNotice.getUuid());
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         params.put("url", esNotice.getUrl());
@@ -182,7 +177,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
                 detailParams.put("historyId", Integer.valueOf(historyNotice.getUuid()));
                 zhaobiaoDetailMapper.updateZhaobiaoDetail(detailParams);
             }
-            //资质信息修改
         }
         return noticeId;
     }
