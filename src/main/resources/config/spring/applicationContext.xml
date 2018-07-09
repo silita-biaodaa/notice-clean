@@ -3,7 +3,7 @@
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
 	   xmlns:context="http://www.springframework.org/schema/context"
-	   xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:p="http://www.springframework.org/schema/p" xmlns:cache="http://www.springframework.org/schema/cache"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
    	   http://www.springframework.org/schema/aop
@@ -11,9 +11,18 @@
        http://www.springframework.org/schema/tx
        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
        http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+       http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+	<!--####开启cache start####-->
+	<cache:annotation-driven cache-manager="cacheManager"/>
+	<!-- cacheManager工厂类，指定ehcache.xml的位置 -->
+	<bean id="cacheManagerFactory" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+		  p:configLocation="classpath:config/cache/ehcache.xml" p:shared="true" />
+	<!-- 声明cacheManager -->
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+		  p:cacheManager-ref="cacheManagerFactory" />
+	<!--####开启cache end####-->
 
-    <!-- 激活annotation功能 -->
+	<!-- 激活annotation功能 -->
 	<context:annotation-config />
 
 	<!-- 加载redis配置文件 -->
@@ -60,7 +69,7 @@
     </bean>
 
 	<import resource="applicationContext-redis.xml" />
-	<import resource="applicationContext-cache.xml" />
+
 	<import resource="applicationContext-es.xml" />
 	<import resource="applicationContext-rules.xml" />
 </beans>

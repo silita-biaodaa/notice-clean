@@ -3,6 +3,7 @@ package com.silita.biaodaa.disruptor.handle.notice;
 import com.lmax.disruptor.EventHandler;
 import com.silita.biaodaa.dao_temp.SnatchDao;
 import com.silita.biaodaa.disruptor.event.AnalyzeEvent;
+import com.silita.biaodaa.service.QuaParseService;
 import com.snatch.model.EsNotice;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,9 @@ public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
 
     @Autowired
     private SnatchDao snatchDao;
+
+    @Autowired
+    QuaParseService quaParseService;
 
     @Override
     public void onEvent(AnalyzeEvent event, long sequence, boolean endOfBatch) throws Exception {

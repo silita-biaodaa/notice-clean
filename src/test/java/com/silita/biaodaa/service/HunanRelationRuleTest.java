@@ -13,6 +13,17 @@ public class HunanRelationRuleTest extends ConfigTest {
     @Autowired
     NoticeRelationService service;
 
+    @Autowired
+    QuaParseService quaParseService;
+
+    @Test
+    public void testCache(){
+        for(int i=1;i<=3;i++){
+            logger.debug("testqueryzh "+i);
+            quaParseService.queryzh();
+        }
+    }
+
     @Test
     public void testBatchInsertRelation(){
         String thisId="1";

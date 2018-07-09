@@ -24,9 +24,9 @@
   <packaging>war</packaging>
 
   <name>notice-clean</name>
-  <groupId>com.biaodaa</groupId>
+  <groupId>com.silita</groupId>
   <artifactId>notice-clean</artifactId>
-  <version>1.0.33.01</version>
+  <version>1.0.33.02</version>
 
   <properties>
     <spring.version>4.1.6.RELEASE</spring.version>

@@ -8,7 +8,7 @@
          timeToLiveSeconds:最大的存活时间
          overflowToDisk:是否允许对象被写入到磁盘
       -->
-    <diskStore path="user.home/ehcache/notice-clean" />
+    <diskStore path="d:/ehcache/notice-clean" />
 
     <defaultCache 
             maxElementsInMemory="10000"    
@@ -22,10 +22,15 @@
             diskExpiryThreadIntervalSeconds="100"    
             memoryStoreEvictionPolicy="LFU"    
             />
-    <!-- example -->
-    <!--<cache name="pbModeCache"  maxEntriesLocalHeap="100"-->
-           <!--maxElementsOnDisk="1000" eternal="false" overflowToDisk="true"-->
-           <!--diskSpoolBufferSizeMB="20" timeToIdleSeconds="300" timeToLiveSeconds="600"-->
-           <!--memoryStoreEvictionPolicy="LFU" />-->
+    <cache name="allZhCache"  maxEntriesLocalHeap="10000"
+           maxElementsOnDisk="20000" eternal="false" overflowToDisk="true"
+           diskSpoolBufferSizeMB="20" timeToIdleSeconds="600" timeToLiveSeconds="3600"
+           memoryStoreEvictionPolicy="LFU" />
+
+
+    <cache name="similarityNotice"  maxEntriesLocalHeap="1000"
+           maxElementsOnDisk="20000" eternal="false" overflowToDisk="true"
+           diskSpoolBufferSizeMB="20" timeToIdleSeconds="300" timeToLiveSeconds="600"
+           memoryStoreEvictionPolicy="LFU" />
 
 </ehcache>
