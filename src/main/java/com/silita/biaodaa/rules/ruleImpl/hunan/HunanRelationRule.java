@@ -87,7 +87,7 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
 //            logger.info("####  处理后的模糊匹配词：" + tempTitle + "  ####");
         String websiteUrl = MyStringUtils.parseWebSiteUrl(esNotice.getUrl());
         argMap.put("openDate",esNotice.getOpenDate());
-        argMap.put("websiteUrl",websiteUrl);
+        argMap.put("websiteUrl",websiteUrl+"%");
         argMap.put("tempTitle",tempTitle);
         List<Map<String,Object>> searchResult = service.querySimilarityNotice(argMap);
 
@@ -154,16 +154,10 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
                 Set<String> nextIdSet = new HashSet<String>(nextIdList);
                 nextIdList = new ArrayList<>(nextIdSet);
                 // 插入关联表
-                if (nextIdList.size() > 5) {
+                if (nextIdList.size()>0) {
                     service.batchInsertRelation(thisId,nextIdList);
                     map.put("mainId",thisId);
-                    map.put("nextId",nextIdList.get(nextIdList.size()-1));//原逻辑不合理，只取了最后一个id,消息推送待查找bug
-                } else {
-                    for (String nextId:nextIdList) {
-                        service.insertSnatchRelation(thisId,nextId);
-                        map.put("mainId",thisId);
-                        map.put("nextId",nextId);
-                    }
+                    map.put("nextId",nextIdList.get(nextIdList.size()-1));//TODO:此处原逻辑不合理，只取了最后一个id,消息推送时会漏消息
                 }
             }
         }

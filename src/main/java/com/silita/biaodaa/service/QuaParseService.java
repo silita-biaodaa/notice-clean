@@ -32,13 +32,11 @@ public class QuaParseService {
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
 
-    @Cacheable(value = "allZhCache", key="'findsAllCategory'")
+    @Cacheable(value = "allZhCache", key="'new_findsAllCategory'")
     public List<Map<String, Object>> queryzh() {
+        logger.info("查询数据库 queryzh...");
         return snatchpressMapper.queryzh();
     }
-
-
-
 
     /**
      * 招标公告资质匹配

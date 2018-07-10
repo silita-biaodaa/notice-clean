@@ -24,7 +24,7 @@
   <packaging>war</packaging>
 
   <name>notice-clean</name>
-  <groupId>com.biaodaa</groupId>
+  <groupId>com.silita</groupId>
   <artifactId>notice-clean</artifactId>
   <version>1.0.33.02</version>
 
