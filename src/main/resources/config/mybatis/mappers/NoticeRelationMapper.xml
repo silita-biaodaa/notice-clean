@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silita.biaodaa.dao.NoticeRelationMapper">
+    <select id="querysLikeUrl" parameterType="Map" resultType="String">
+        SELECT id
+        FROM ${snatchTabName}
+        WHERE source=#{source}
+        <if test="url!=null and url !=''">
+          AND url LIKE #{url}
+        </if>
+        <if test="urls!=null and urls.size()>0">
+            AND url in
+            <foreach collection="urls" item="url" separator="," open="(" close=")">
+              #{url}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="querySimilarityNotice" parameterType="Map" resultType="Map">
+      SELECT id,title
+      FROM ${snatchTabName}
+      WHERE openDate BETWEEN DATE_SUB(#{openDate},INTERVAL #{dayRegion} DAY) AND DATE_SUB(#{openDate},INTERVAL -#{dayRegion} DAY)
+            <if test="tempTitle !=null and tempTitle!=''">
+                 AND title LIKE #{tempTitle}
+            </if>
+            <if test="websiteUrl !=null and websiteUrl!=''">
+                 AND url LIKE #{websiteUrl}
+            </if>
+      ORDER BY opendate DESC limit #{limitCount}
+    </select>
+
+    <select id="queryThisId" parameterType="Map" resultType="String">
+        SELECT max(id)
+        FROM ${snatchTabName}
+        WHERE url = #{noticeUrl}
+    </select>
+
+    <select id="queryRelationNextIds" parameterType="String" resultType="String">
+        SELECT mainId AS id FROM mishu.snatchrelation WHERE nextId = #{param1}
+        UNION
+        SELECT nextId AS id FROM mishu.snatchrelation WHERE mainId = #{param1}
+    </select>
+
+    <insert id="batchInsertRelation" parameterType="Map">
+        INSERT INTO mishu.snatchrelation
+        (mainId, nextId, lastChangeTime,relationMethod)
+        VALUES
+        <foreach collection="nextIds" item="nextId" separator=",">
+        (#{thisId},#{nextId},NOW(),0)
+        </foreach>
+    </insert>
+
+    <insert id="insertSnatchRelation" parameterType="Map">
+        INSERT INTO mishu.snatchrelation
+        (mainId, nextId, lastChangeTime,relationMethod)
+        VALUES(#{thisId},#{nextId},NOW(),0)
+    </insert>
+
+</mapper>

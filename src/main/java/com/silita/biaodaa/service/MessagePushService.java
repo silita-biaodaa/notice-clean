@@ -14,6 +14,6 @@ public interface MessagePushService {
      * @param snatchUrl 新来的公告url
      * @return
      */
-    boolean queryCollectNotice(Map<String, String> map, String snatchUrl);
+    boolean queryCollectNotice(Map<String, Object> map, String snatchUrl);
 
 }

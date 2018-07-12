@@ -23,9 +23,10 @@ public class MessagePushServiceImpl implements MessagePushService {
     private static Logger logger = Logger.getLogger(MessagePushServiceImpl.class);
 
     @Override
-    public boolean queryCollectNotice(Map<String, String> map, String snatchUrl) {
-        String mainId = map.get("mainId");
-        String relationId = map.get("nextId");
+    public boolean queryCollectNotice(Map<String, Object> map, String snatchUrl) {
+        String mainId = (String)map.get("mainId");
+        String relationId = (String)map.get("nextId");
+        List<String> nextIds = (List<String>)map.get("nextIds");
         if(MyStringUtils.isNull(mainId) && MyStringUtils.isNull(relationId)){
             return false;
         }

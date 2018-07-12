@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silita.biaodaa.dao.SnatchurlRepetitionMapper">
+    <insert id="insertSnatchurlRepetition" parameterType="com.silita.biaodaa.model.SnatchurlRepetition">
+      INSERT INTO
+      mishu.snatchurl_repetition(
+      `noticeUuid`, `title`, `url`, `openDate`, `content`,
+      `rank`, `redisId`, `websitePlanId`, `reptMethod`, `source`)
+      VALUES(
+      #{noticeuuid}, #{title}, #{url}, #{opendate}, #{content},
+      #{rank}, #{redisid}, #{websiteplanid}, #{reptmethod}, #{source}
+      )
+    </insert>
+
+    <delete id="deleteSnatchurlRepetition" parameterType="Long">
+        DELETE FROM mishu.snatchrelation WHERE mainId = #{id} OR nextId = #{id}
+    </delete>
+</mapper>

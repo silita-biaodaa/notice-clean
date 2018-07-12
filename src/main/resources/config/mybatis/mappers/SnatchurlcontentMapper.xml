@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silita.biaodaa.dao.SnatchurlcontentMapper" >
+    <insert id="insertSnatchurlContent" parameterType="Map">
+        INSERT INTO
+        ${snatchUrlContentTable}(
+          content, snatchUrlId
+        )
+        VALUES(
+          #{content}, #{snatchUrlId}
+        )
+    </insert>
+
+    <update id="updateSnatchurlContent" parameterType="Map">
+        UPDATE FROM ${snatchUrlContentTable}
+        SET content = #{content}
+        WHERE snatchUrlId = #{snatchUrlId}
+    </update>
+</mapper>

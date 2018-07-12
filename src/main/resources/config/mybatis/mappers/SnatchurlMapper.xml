@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silita.biaodaa.dao.SnatchurlMapper">
+    <select id="getSnatchUrlCountByUrl" parameterType="Map" resultType="com.silita.biaodaa.model.SnatchUrl">
+        SELECT * FROM mishu.snatchurl WHERE url = #{url} AND openDate = #{openDate}
+    </select>
+
+    <select id="listSnatchUrl" parameterType="Map" resultType="com.snatch.model.EsNotice">
+        SELECT a.id uuid, a.title, a.url, a.openDate, ifnull(a.province,'') province,
+        ifnull(a.city,'') city, ifnull(a.county,'') county, ifnull(`type`,0) `type`, ifnull(rank,0) rank, ifnull(redisId,0) redisId,
+        ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid snatchNumber,
+        a.biddingType, a.businessType, a.edit edit, a.source
+        FROM ${snatchurlTable} AS a
+        LEFT JOIN ${snatchurlContentTable} AS b ON a.id = b.snatchUrlId
+        <where>
+            a.isShow = 0 AND a.type = #{type}
+            AND a.openDate BETWEEN DATE_SUB(#{openDate},INTERVAL 3 DAY) AND DATE_SUB(#{openDate},INTERVAL -3 DAY)
+            AND a.url NOT LIKE CONCAT('%',#{url},'%')
+            <if test="city !=null and city != ''">
+                AND a.city = #{city}
+            </if>
+            <if test="title != null and title != ''">
+                AND a.title LIKE #{title}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateSnatchUrlById" parameterType="Map">
+        UPDATE ${snatchurlTable}
+        <set>
+            <if test="isShow != null and isShow != ''">
+                isShow = #{isShow}
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteSnatchUrlById" parameterType="String">
+        DELETE FROM mishu.snatchurl WHERE id = #{id}
+    </delete>
+
+    <insert id="insertSnatchUrl" parameterType="Map">
+        INSERT INTO
+        ${snatchurlTable}(
+        `url`, `title`, `snatchDatetime`, `snatchPlanId`, `type`,
+        `status`, `openDate`, `range`, `edit`, `randomNum`,
+        `biddingType`, `otherType`, `tableName`, `suuid`, `province`,
+        `city`, `county`, `rank`, `redisId`, `websitePlanId`,
+        `uuid`, `businessType`, `source`, `isShow`
+        )
+        VALUES(
+        #{url}, #{title}, NOW(), 2, #{type},
+        1, DATE_FORMAT(#{openDate},'%Y-%m-%d'), YEAR(#{openDate}), #{edit}, 0,
+        #{biddingType}, #{otherType}, #{tableName}, REPLACE(UUID(),'-',''), #{province},
+        #{city}, #{county}, #{rank}, #{redisId}, #{websitePlanId},
+        #{uuid}, #{businessType}, #{source}, #{isShow}
+        )
+    </insert>
+
+    <select id="getMaxIdByUrl" parameterType="Map" resultType="Integer">
+        SELECT MAX(id) FROM ${snatchurlTable} WHERE url = #{url}
+    </select>
+
+    <select id="getSnatchurlIdByUrl" parameterType="Map" resultType="Integer">
+        SELECT id FROM ${snatchurlTable} WHERE url = #{url}
+    </select>
+
+    <update id="updateSnatchUrl" parameterType="Map">
+        UPDATE FROM ${snatchurlTable}
+        SET url = #{url}, title = #{title}, openDate = #{openDate}, province = #{province}, city = #{city},
+        county = #{county}, rank = #{rank}, websitePlanId = #{websitePlanId}, uuid = #{uuid}, businessType = #{businessType},
+        changeNum = changeNum + 1, otherType = #{otherType}, snatchDateTime = NOW(), redisId = #{redisId}, source = #{source}
+        WHERE id = #{id}
+    </update>
+
+
+</mapper>

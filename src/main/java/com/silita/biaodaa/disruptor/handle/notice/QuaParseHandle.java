@@ -3,6 +3,7 @@ package com.silita.biaodaa.disruptor.handle.notice;
 import com.lmax.disruptor.EventHandler;
 import com.silita.biaodaa.dao_temp.SnatchDao;
 import com.silita.biaodaa.disruptor.event.AnalyzeEvent;
+import com.silita.biaodaa.service.QuaParseService;
 import com.snatch.model.EsNotice;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
     @Autowired
     private SnatchDao snatchDao;
 
+    @Autowired
+    QuaParseService quaParseService;
+
     @Override
     public void onEvent(AnalyzeEvent event, long sequence, boolean endOfBatch) throws Exception {
         SoftReference<EsNotice> noticeRef = new SoftReference(event.getEsNotice());
@@ -27,7 +31,7 @@ public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
         try {
             if (esNotice != null) {
                 logger.info("资质处理开始 #### [noticeId:"+esNotice.getUuid()+"][redisId:" + esNotice.getRedisId() + "][rank:" + esNotice.getRank() + "][source:" + esNotice.getSource() + "][ur:" + esNotice.getUrl() + "]" + esNotice.getTitle() + esNotice.getOpenDate());
-                snatchDao.insertUrlCert(Integer.parseInt(esNotice.getUuid()), esNotice);
+                quaParseService.insertUrlCert(Integer.parseInt(esNotice.getUuid()), esNotice);
                 logger.info("资质处理成功结束 ####  [noticeId:"+esNotice.getUuid()+"][redisId:" + esNotice.getRedisId() + "][rank:" + esNotice.getRank() + "][source:" + esNotice.getSource() + "][ur:" + esNotice.getUrl() + "]" + esNotice.getTitle() + esNotice.getOpenDate());
             }
         }catch (Exception e){
