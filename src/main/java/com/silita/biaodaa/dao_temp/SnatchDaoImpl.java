@@ -8,7 +8,7 @@ import com.silita.biaodaa.common.jdbc.Page;
 import com.silita.biaodaa.disruptor.DisruptorOperator;
 import com.silita.biaodaa.model.Cert;
 import com.silita.biaodaa.model.SnatchUrl;
-import com.silita.biaodaa.service.QuaParseService;
+import com.silita.biaodaa.service.ZhService;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.CommonUtil;
 import com.snatch.model.EsNotice;
@@ -43,6 +43,9 @@ public class SnatchDaoImpl extends JdbcBase implements SnatchDao {
 
 	@Autowired
 	private DisruptorOperator disruptorOperator;
+
+
+	private ZhService zhService;
 
 	String uuid;
 
@@ -596,7 +599,7 @@ public class SnatchDaoImpl extends JdbcBase implements SnatchDao {
 	}
 
 	@Autowired
-	QuaParseService quaParseService;
+	ZhService ZhService;
 
 	/**
 	 * 招标公告资质匹配
@@ -609,7 +612,7 @@ public class SnatchDaoImpl extends JdbcBase implements SnatchDao {
 		SoftReference<String> contentRef = new SoftReference<String>(snalist.get("press").toString());
 		List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();
 
-		List<Map<String, Object>> list = quaParseService.queryzh();
+		List<Map<String, Object>> list = zhService.queryzh();
 		for (int i = 0; i < list.size(); i++) {
 			int num = contentRef.get().indexOf(list.get(i).get("name").toString());
 			if(num != -1){
@@ -721,8 +724,7 @@ public class SnatchDaoImpl extends JdbcBase implements SnatchDao {
 		int star = content.indexOf("注册建造师");
 		if(star != -1){
 			String str= content.substring(star-20,star+50);
-			String zh ="SELECT `name`,mainUUid,rank FROM build_zh";
-			List<Map<String,Object>> list=this.getJdbcTemplate().queryForList(zh,new Object[]{});
+			List<Map<String,Object>> list=zhService.getBuildZhList();
 			for (int i = 0; i < list.size(); i++) {
 				int num =str.indexOf(list.get(i).get("name").toString());
 				if(num != -1){

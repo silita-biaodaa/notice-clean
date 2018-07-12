@@ -43,6 +43,7 @@ public class CleaningTemplateImpl implements CleaningTemplate {
         boolean repeatStatus = repeatRule.executeRule(esNotice);
         logger.info("##### 入库消耗时间：" + (System.currentTimeMillis() - repStartTime) +" ms #####");
         // 无重复数据调用关联方法
+        logger.info("[redisId:"+esNotice.getRedisId()+"][url:"+esNotice.getUrl()+"][repeatStatus:"+repeatStatus+"][relationFlag:"+relationFlag+"]");
         if(repeatStatus && relationFlag){
             String title = esNotice.getTitle();
             double startTotal = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
@@ -62,7 +63,6 @@ public class CleaningTemplateImpl implements CleaningTemplate {
                     messagePushService.queryCollectNotice(relationMap, esNotice.getUrl());
                 }
             }
-
         }
         esNotice =null;
     }

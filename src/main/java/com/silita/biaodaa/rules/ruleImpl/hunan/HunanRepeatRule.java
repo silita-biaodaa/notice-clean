@@ -227,6 +227,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 // 直接入库
                 handleNotRepeat(esNotice);
             }
+        }catch (Exception e){
+            logger.error("湖南去重异常："+e,e);
         }finally {
             logger.info("湖南去重结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
         }

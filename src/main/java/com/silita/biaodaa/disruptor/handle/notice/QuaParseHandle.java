@@ -31,7 +31,7 @@ public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
         try {
             if (esNotice != null) {
                 logger.info("资质处理开始 #### [noticeId:"+esNotice.getUuid()+"][redisId:" + esNotice.getRedisId() + "][rank:" + esNotice.getRank() + "][source:" + esNotice.getSource() + "][ur:" + esNotice.getUrl() + "]" + esNotice.getTitle() + esNotice.getOpenDate());
-                snatchDao.insertUrlCert(Integer.parseInt(esNotice.getUuid()), esNotice);
+                quaParseService.insertUrlCert(Integer.parseInt(esNotice.getUuid()), esNotice);
                 logger.info("资质处理成功结束 ####  [noticeId:"+esNotice.getUuid()+"][redisId:" + esNotice.getRedisId() + "][rank:" + esNotice.getRank() + "][source:" + esNotice.getSource() + "][ur:" + esNotice.getUrl() + "]" + esNotice.getTitle() + esNotice.getOpenDate());
             }
         }catch (Exception e){

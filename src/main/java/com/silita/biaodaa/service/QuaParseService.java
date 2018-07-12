@@ -8,7 +8,6 @@ import com.silita.biaodaa.utils.CommonUtil;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
@@ -30,13 +29,12 @@ public class QuaParseService {
     SnatchpressMapper snatchpressMapper;
 
     @Autowired
+    ZhService ZhService;
+
+    @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
 
-    @Cacheable(value = "allZhCache", key="'new_findsAllCategory'")
-    public List<Map<String, Object>> queryzh() {
-        logger.info("查询数据库 queryzh...");
-        return snatchpressMapper.queryzh();
-    }
+
 
     /**
      * 招标公告资质匹配
@@ -47,7 +45,7 @@ public class QuaParseService {
         SoftReference<String> contentRef = new SoftReference<String>(snatchpress.getPress());
         List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();
 
-        List<Map<String, Object>> list = queryzh();
+        List<Map<String, Object>> list = ZhService.queryzh();
         for (int i = 0; i < list.size(); i++) {
             int num = contentRef.get().indexOf(list.get(i).get("name").toString());
             if(num != -1){
@@ -167,7 +165,7 @@ public class QuaParseService {
         int star = content.indexOf("注册建造师");
         if(star != -1){
             String str= content.substring(star-20,star+50);
-            List<Map<String,Object>> list=snatchpressMapper.getBuildZhList();
+            List<Map<String,Object>> list= ZhService.getBuildZhList();
             for (int i = 0; i < list.size(); i++) {
                 int num =str.indexOf(list.get(i).get("name").toString());
                 if(num != -1){

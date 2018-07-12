@@ -118,51 +118,57 @@ public class HunanRelationRule extends HunanBaseRule implements RelationRule {
 
     @Override
     public Map<String, Object> executeRule(EsNotice esNotice) {
-        logger.info("湖南关联开始：[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
-        String source = esNotice.getSource();
-        String snatchTabName = RouteUtils.routeTableName("mishu.snatchurl",source);
-        String noticeUrl = esNotice.getUrl();
-        Map argMap = new HashMap<>();
-        argMap.put("snatchTabName",snatchTabName);
-        argMap.put("source",source);
-        argMap.put("noticeUrl",noticeUrl);
+        Map<String, Object> map = new HashMap<String, Object>();
+        try {
+            logger.info("湖南关联开始：[redisId:" + esNotice.getRedisId() + "][source:" + esNotice.getSource() + "][ur:" + esNotice.getUrl() + "]" + esNotice.getTitle() + esNotice.getOpenDate());
+            String source = esNotice.getSource();
+            String snatchTabName = RouteUtils.routeTableName("mishu.snatchurl", source);
+            String noticeUrl = esNotice.getUrl();
+            Map argMap = new HashMap<>();
+            argMap.put("snatchTabName", snatchTabName);
+            argMap.put("source", source);
+            argMap.put("noticeUrl", noticeUrl);
 
-        Map<String,Object> map = new HashMap<String,Object>();
-        List<String> relationList = null; // 关联列表
-        int especIdx = especWebSite(noticeUrl);
-        if (especIdx != -1) {
-            logger.info("#####  启用张家界、邵阳、湘西、湘潭、长沙 公告关联规则！  #####");
-            relationList = specialSiteRel(especIdx,esNotice,argMap);
-        } else {
-            // 通用关联规则
-            relationList = normalRule(esNotice,argMap);
-        }
-        logger.info("#####  关联条数：" + relationList.size() + "  #####");
+            List<String> relationList = null; // 关联列表
+            int especIdx = especWebSite(noticeUrl);
+            if (especIdx != -1) {
+                logger.info("#####  启用张家界、邵阳、湘西、湘潭、长沙 公告关联规则！  #####");
+                relationList = specialSiteRel(especIdx, esNotice, argMap);
+            } else {
+                // 通用关联规则
+                relationList = normalRule(esNotice, argMap);
+            }
+            logger.info("#####  关联条数：" + relationList.size() + "  #####");
 
-        // 进行关联
-        if (!relationList.isEmpty() && relationList.size() > 1 && relationList.size() < 20 ) {
-            String thisId = service.queryThisId(argMap);
-            List<String> nextIdList = new ArrayList<String>();
-            if (MyStringUtils.isNotNull(thisId)) {
-                for (String otherId : relationList) {
-                    if (!otherId.equals(thisId)) {
-                        nextIdList.addAll(service.queryRelationNextIds(otherId));
-                        nextIdList.add(otherId);
+            // 进行关联
+            if (!relationList.isEmpty() && relationList.size() > 1 && relationList.size() < 20) {
+                String thisId = service.queryThisId(argMap);
+                List<String> nextIdList = new ArrayList<String>();
+                if (MyStringUtils.isNotNull(thisId)) {
+                    for (String otherId : relationList) {
+                        if (!otherId.equals(thisId)) {
+                            nextIdList.addAll(service.queryRelationNextIds(otherId));
+                            nextIdList.add(otherId);
+                        }
+                    }
+                    // list去重
+                    Set<String> nextIdSet = new HashSet<String>(nextIdList);
+                    nextIdList = new ArrayList<>(nextIdSet);
+                    // 插入关联表
+                    if (nextIdList.size() > 0) {
+                        service.batchInsertRelation(thisId, nextIdList);
+                        map.put("mainId", thisId);
+                        map.put("nextId", nextIdList.get(nextIdList.size() - 1));//TODO:此处原逻辑不合理，只取了最后一个id,消息推送时会漏消息
                     }
                 }
-                // list去重
-                Set<String> nextIdSet = new HashSet<String>(nextIdList);
-                nextIdList = new ArrayList<>(nextIdSet);
-                // 插入关联表
-                if (nextIdList.size()>0) {
-                    service.batchInsertRelation(thisId,nextIdList);
-                    map.put("mainId",thisId);
-                    map.put("nextId",nextIdList.get(nextIdList.size()-1));//TODO:此处原逻辑不合理，只取了最后一个id,消息推送时会漏消息
-                }
             }
+        }catch (Exception e){
+            logger.error(e,e);
+        }finally {
+            logger.info("#####  湖南关联结束！  #####[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+            return map;
         }
-        logger.info("#####  湖南关联结束！  #####[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
-        return map;
+
     }
 
     /**
