@@ -144,11 +144,12 @@ public class QuaParseService {
 
         insertUrlBuild(id,contentRef);
         //建造师资格匹配
-        try{
-            insertZhaobiaoEsNotice(notice);	//ES
-        } catch (Exception e) {
-            logger.error("@@@@ES招标入库报错" + e);
-        }
+        logger.info("招标公告取消插入es");
+//        try{
+//            insertZhaobiaoEsNotice(notice);	//ES
+//        } catch (Exception e) {
+//            logger.error("@@@@ES招标入库报错" + e);
+//        }
         return zh;
     }
 

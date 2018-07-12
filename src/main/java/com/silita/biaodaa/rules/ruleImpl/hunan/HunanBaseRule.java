@@ -369,13 +369,14 @@ public abstract class HunanBaseRule {
             noticeCleanService.insertDetail(notice);
 
             if (notice.getType() == 2) { //中标直接更新索引，不涉及资质
-                try {
-                    logger.info("中标公告插入es：start");
-                    snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
-                    logger.info("中标公告插入es: finished");
-                } catch (Exception e) {
-                    logger.error("@@@@ES中标入库报错" + e);
-                }
+                logger.info("中标公告取消插入es");
+//                try {
+//                    logger.info("中标公告插入es：start");
+//                    snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
+//                    logger.info("中标公告插入es: finished");
+//                } catch (Exception e) {
+//                    logger.error("@@@@ES中标入库报错" + e);
+//                }
             } else {
                 //非2中标公告发起资质匹配任务
                 disruptorOperator.publishQuaParse(notice);
