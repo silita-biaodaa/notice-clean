@@ -26,6 +26,6 @@
     </insert>
 
     <select id="getZhongBiaoAnalyzeDetailByUrl" parameterType="String" resultType="Integer">
-        SELECT COUNT(*) FROM FROM mishu.zhongbiao_analyze_detail WHERE noticeUrl = #{noticeUrl}
+        SELECT COUNT(*) FROM mishu.zhongbiao_analyze_detail WHERE noticeUrl = #{noticeUrl}
     </select>
 </mapper>
