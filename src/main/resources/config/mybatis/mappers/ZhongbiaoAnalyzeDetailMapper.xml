@@ -21,7 +21,7 @@
           #{oneZly}, #{twoName}, #{twoOffer}, #{twoProjDuty}, #{twoSkillDuty},
           #{twoSgy}, #{twoAqy}, #{twoZly}, #{threeName}, #{threeOffer},
           #{threeProjDuty}, #{threeSkillDuty}, #{threeSgy}, #{threeAqy}, #{threeZly},
-          #{projectTimeLimit}, #{projectCompletionDate}, #{block}, #{analyzeDate}
+          #{projectTimeLimit}, #{projectCompletionDate}, #{block},now()
         )
     </insert>
 
