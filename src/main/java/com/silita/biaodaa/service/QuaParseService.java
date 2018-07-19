@@ -149,6 +149,7 @@ public class QuaParseService {
         if(insertEs != null && insertEs.equals("true")){
             try{
                 insertZhaobiaoEsNotice(notice);
+                logger.info("招标公告插入es完成");
             } catch (Exception e) {
                 logger.error("招标公告插入es异常" + e,e);
             }
