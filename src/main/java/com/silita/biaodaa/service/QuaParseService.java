@@ -1,5 +1,6 @@
 package com.silita.biaodaa.service;
 
+import com.silita.biaodaa.common.config.CustomizedPropertyConfigurer;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
 import com.silita.biaodaa.common.elastic.model.ElasticEntity;
 import com.silita.biaodaa.dao.SnatchpressMapper;
@@ -143,13 +144,17 @@ public class QuaParseService {
         }
 
         insertUrlBuild(id,contentRef);
-        //建造师资格匹配
-        logger.info("招标公告取消插入es");
-//        try{
-//            insertZhaobiaoEsNotice(notice);	//ES
-//        } catch (Exception e) {
-//            logger.error("@@@@ES招标入库报错" + e);
-//        }
+
+        String insertEs = (String) CustomizedPropertyConfigurer.getContextProperty("es.data.send");
+        if(insertEs != null && insertEs.equals("true")){
+            try{
+                insertZhaobiaoEsNotice(notice);
+            } catch (Exception e) {
+                logger.error("招标公告插入es异常" + e,e);
+            }
+        }else{
+            logger.info("招标公告取消插入es");
+        }
         return zh;
     }
 
