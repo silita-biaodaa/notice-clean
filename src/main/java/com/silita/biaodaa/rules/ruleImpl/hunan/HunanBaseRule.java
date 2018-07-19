@@ -1,6 +1,7 @@
 package com.silita.biaodaa.rules.ruleImpl.hunan;
 
 import com.silita.biaodaa.common.Constant;
+import com.silita.biaodaa.common.config.CustomizedPropertyConfigurer;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhongbiaoSnatch;
 import com.silita.biaodaa.common.redis.RedisClear;
@@ -369,13 +370,19 @@ public abstract class HunanBaseRule {
             noticeCleanService.insertDetail(notice);
 
             if (notice.getType() == 2) { //中标直接更新索引，不涉及资质
-                try {
-                    logger.info("中标公告插入es：start");
-                    snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
-                    logger.info("中标公告插入es: finished");
-                } catch (Exception e) {
-                    logger.error("@@@@ES中标入库报错" + e);
+                String insertEs = (String)CustomizedPropertyConfigurer.getContextProperty("es.data.send");
+                if(insertEs != null && insertEs.equals("true")){
+                    try {
+                        logger.info("中标公告插入es：start");
+                        snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
+                        logger.info("中标公告插入es: finished");
+                    } catch (Exception e) {
+                        logger.error("中标公告入es异常" + e,e);
+                    }
+                }else{
+                    logger.info("中标公告取消插入es");
                 }
+
             } else {
                 //非2中标公告发起资质匹配任务
                 disruptorOperator.publishQuaParse(notice);

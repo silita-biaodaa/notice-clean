@@ -2,7 +2,6 @@ package com.silita.biaodaa.service;
 
 import com.silita.biaodaa.dao.NoticeRelationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,7 +20,7 @@ public class NoticeRelationService {
         return mapper.querysLikeUrl(argMap);
     }
 
-    @Cacheable(value = "similarityNotice", key="#argMap.get('openDate')+#argMap.get('websiteUrl')+#argMap.get('tempTitle')")
+//    @Cacheable(value = "similarityNotice", key="#argMap.get('openDate')+#argMap.get('websiteUrl')+#argMap.get('tempTitle')")
     public List<Map<String,Object>> querySimilarityNotice (Map argMap) {
         argMap.put("dayRegion",30);
         argMap.put("limitCount",1000);

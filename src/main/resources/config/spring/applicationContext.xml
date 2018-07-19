@@ -25,8 +25,15 @@
 	<!-- 激活annotation功能 -->
 	<context:annotation-config />
 
-	<!-- 加载redis配置文件 -->
-	<context:property-placeholder location="classpath:config/clean.properties" />
+	<!-- 加载配置文件 -->
+	<bean id="propertyConfigurer" class="com.silita.biaodaa.common.config.CustomizedPropertyConfigurer" >
+		<property name="fileEncoding" value="utf-8" />
+		<property name="locations">
+			<list>
+				<value>classpath:config/clean.properties</value>
+			</list>
+		</property>
+	</bean>
 
 	<context:component-scan base-package="com.silita">
 		<context:exclude-filter type="annotation"
