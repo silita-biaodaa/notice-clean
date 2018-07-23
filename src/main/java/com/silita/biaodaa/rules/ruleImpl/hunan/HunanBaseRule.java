@@ -454,6 +454,7 @@ public abstract class HunanBaseRule {
                 if (title.contains("标段")) {
                     if (!historyTitle.contains("标段")) {
                         it.remove();
+                        break;
                     }
                     int titleBiaoduanIndex = title.lastIndexOf("标段");
                     int historyBiaoduanIndex = historyTitle.lastIndexOf("标段");
