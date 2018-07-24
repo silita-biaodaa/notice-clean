@@ -364,6 +364,7 @@ public abstract class HunanBaseRule {
         notice.setBiddingType(notice.getBiddingType());
 
         String source = notice.getSource();
+        logger.debug("####source:"+source);
         //仅湖南数据更新维度，资质与es
         if (source.equals(Constant.HUNAN_SOURCE)) {
             // 插入维度信息

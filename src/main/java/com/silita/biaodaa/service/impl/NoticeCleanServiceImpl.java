@@ -56,6 +56,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         Map params = new HashMap<String, Object>();
         params.put("url", esNotice.getUrl());
         params.put("openDate", esNotice.getOpenDate());
+        params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         SnatchUrl vo = snatchurlMapper.getSnatchUrlCountByUrl(params);
         if (vo != null) {
             return 1;
