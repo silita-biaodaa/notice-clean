@@ -57,8 +57,8 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         params.put("url", esNotice.getUrl());
         params.put("openDate", esNotice.getOpenDate());
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        SnatchUrl vo = snatchurlMapper.getSnatchUrlCountByUrl(params);
-        if (vo != null) {
+        List<SnatchUrl> vo = snatchurlMapper.getSnatchUrlCountByUrl(params);
+        if (vo != null && vo.size()>0) {
             return 1;
         }
         return 0;

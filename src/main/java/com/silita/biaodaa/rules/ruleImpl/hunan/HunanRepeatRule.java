@@ -30,7 +30,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
 
     @Override
     public boolean executeRule(EsNotice esNotice) {
-        logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+        logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         try {
             int isExist = noticeCleanService.countSnastchUrlByUrl(esNotice);
             //url判断（已存在不入库）
@@ -228,9 +228,9 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 handleNotRepeat(esNotice);
             }
         }catch (Exception e){
-            logger.error("湖南去重异常："+e,e);
+            logger.error("湖南去重异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
-            logger.info("湖南去重结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+            logger.info("湖南去重结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         }
 
         return true;

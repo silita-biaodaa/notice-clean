@@ -12,7 +12,7 @@ public interface SnatchurlMapper {
      * @param map
      * @return
      */
-    SnatchUrl getSnatchUrlCountByUrl(Map map);
+    List<SnatchUrl> getSnatchUrlCountByUrl(Map map);
 
     /**
      *
