@@ -59,4 +59,18 @@ public interface SnatchurlMapper {
     void updateSnatchUrl(Map map);
 
 
+    /**
+     * 根据公示时间获取ES搜索引擎所需招标数据
+     * @Param openDate
+     * @return
+     */
+    List<Map<String, Object>> listESZhaoBiaoDateByOpenDate(String openDate);
+
+
+    /**
+     * 据公示时间获取ES搜索引擎所需中标数据
+     * @Param openDate
+     * @return
+     */
+    List<Map<String, Object>> listESZhongBiaoDateByOpenDate(String openDate);
 }
