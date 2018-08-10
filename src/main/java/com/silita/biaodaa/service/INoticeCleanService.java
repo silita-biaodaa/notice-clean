@@ -3,7 +3,6 @@ package com.silita.biaodaa.service;
 import com.snatch.model.EsNotice;
 
 import java.util.List;
-import java.util.Map;
 
 public interface INoticeCleanService {
     /**
@@ -56,13 +55,6 @@ public interface INoticeCleanService {
      * @param historyNotice
      */
     int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice);
-
-    /**
-     *
-     * @param esNotice
-     * @return
-     */
-    Map<String, String> insertNotice(EsNotice esNotice) ;
 
     /**
      *

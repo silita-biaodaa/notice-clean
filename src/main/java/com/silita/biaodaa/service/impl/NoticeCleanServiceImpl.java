@@ -1,6 +1,5 @@
 package com.silita.biaodaa.service.impl;
 
-import com.fasterxml.jackson.databind.util.ObjectIdMap;
 import com.silita.biaodaa.dao.*;
 import com.silita.biaodaa.model.SnatchUrl;
 import com.silita.biaodaa.model.SnatchurlRepetition;
@@ -19,6 +18,8 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.silita.biaodaa.utils.MyStringUtils.reduceString;
 
 @Service("noticeCleanService")
 public class NoticeCleanServiceImpl implements INoticeCleanService {
@@ -185,84 +186,12 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         return noticeId;
     }
 
-    /**
-     * 添加公共基本信息、及公共内容
-     *
-     * @param esNotice
-     * @return
-     */
-    @Override
-    public Map<String, String> insertNotice(EsNotice esNotice) {
-        Map snatchurlParams = new HashMap<String, Object>();
-        snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        snatchurlParams.put("url", esNotice.getUrl());
-        snatchurlParams.put("title", esNotice.getTitle());
-//        snatchurlParams.put("snatchDatetime", NOW());
-//        snatchurlParams.put("snatchPlanId", 2);
-        snatchurlParams.put("type", esNotice.getType());
-//        snatchurlParams.put("status", 0);
-//        snatchurlParams.put("openDate", DATE_FORMAT(esNotice.getOpenDate(),'%Y-%m-%d') );
-        snatchurlParams.put("openDate", esNotice.getOpenDate());
-//        snatchurlParams.put("range", YEAR(esNotice.getOpenDate()));
-        snatchurlParams.put("edit", esNotice.getEdit() == null ? 0 : esNotice.getEdit());
-//        snatchurlParams.put("randomNum", 0);
-        snatchurlParams.put("biddingType", esNotice.getBiddingType() == null ? 0 : Integer.parseInt(esNotice.getBiddingType()));
-        snatchurlParams.put("otherType", esNotice.getOtherType() == null ? 0 : Integer.parseInt(esNotice.getOtherType()));
-        snatchurlParams.put("tableName", "mishu.snatchurl");
-//        snatchurlParams.put("suuid", REPLACE(UUID(),'-',''));
-        snatchurlParams.put("province", esNotice.getProvince());
-        snatchurlParams.put("city", esNotice.getCity());
-        snatchurlParams.put("county", esNotice.getCounty());
-        snatchurlParams.put("rank", esNotice.getRank());
-        snatchurlParams.put("redisId", esNotice.getRedisId());
-        snatchurlParams.put("websitePlanId", esNotice.getWebsitePlanId());
-        snatchurlParams.put("uuid", esNotice.getSnatchNumber());
-        snatchurlParams.put("businessType", esNotice.getBusinessType());
-        snatchurlParams.put("source", esNotice.getSource());
-        snatchurlParams.put("isShow", esNotice.getIsShow() == null ? 0 : esNotice.getIsShow());
-        //添加公告基本信息
-        snatchurlMapper.insertSnatchUrl(snatchurlParams);
-
-        Map maxIdparams = new HashMap<String, Object>();
-        maxIdparams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        maxIdparams.put("url", esNotice.getUrl());
-        //获取刚才基本信息Id
-        Integer id = snatchurlMapper.getMaxIdByUrl(maxIdparams);
-
-        Map contentParams = new HashMap<String, Object>();
-        contentParams.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent", esNotice));
-        contentParams.put("content", esNotice.getContent());
-        contentParams.put("snatchUrlId", id);
-        //添加公告内容
-        snatchurlcontentMapper.insertSnatchurlContent(contentParams);
-
-        Map pressParams = new HashMap<String, Object>();
-        String text = chineseCompressUtil.getPlainText(esNotice.getContent());  //
-        pressParams.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
-        pressParams.put("content", text);
-        pressParams.put("snatchUrlId", id);
-        //添加整理后的公告内容
-        snatchpressMapper.insertSnatchPress(pressParams);
-
-        Map updateSnatchurlParams = new HashMap<String, ObjectIdMap>();
-        snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice.getSource()));
-        snatchurlParams.put("status", 1);
-        //更新公告基本信息状态
-        snatchurlMapper.updateSnatchUrlById(updateSnatchurlParams);
-
-        Map<String, String> map = new HashMap<String, String>();    //用于ES更新
-        map.put("id", String.valueOf(id));
-        map.put("otherType", esNotice.getOtherType());
-        map.put("biddingType", esNotice.getBiddingType());
-        return map;
-    }
-
     @Override
     public void insertSnatchUrl(EsNotice esNotice) {
         Map snatchurlParams = new HashMap<String, Object>();
         snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         snatchurlParams.put("url", esNotice.getUrl());
-        snatchurlParams.put("title", esNotice.getTitle());
+        snatchurlParams.put("title", reduceString(esNotice.getTitle(),100));
         snatchurlParams.put("type", esNotice.getType());
         snatchurlParams.put("openDate", esNotice.getOpenDate());
         snatchurlParams.put("edit", esNotice.getEdit() == null ? 0 : esNotice.getEdit());
