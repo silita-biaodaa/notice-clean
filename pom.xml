@@ -49,7 +49,7 @@
 
     <fastjson.version>1.1.17</fastjson.version>
 
-    <servlet-api.version>2.5</servlet-api.version>
+    <servlet-api.version>3.0.1</servlet-api.version>
     <jsp-api.version>2.0</jsp-api.version>
     <jta.version>1.1</jta.version>
 
@@ -301,7 +301,7 @@
     <!-- Servlet以及相关 -->
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>javax.servlet-api</artifactId>
       <version>${servlet-api.version}</version>
       <scope>provided</scope>
     </dependency>
