@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silita.biaodaa.dao.NoticeRuleMapper">
+    <select id="queryRulesByType" resultType="Map" parameterType="String">
+        select id,name,order_no,remark
+        from mishu.dic_common
+        where type=#{type}
+        order by order_no asc
+    </select>
+
+    <select id="matchEsNoticeList" parameterType="Map" resultType="com.snatch.model.EsNotice">
+        SELECT a.id uuid, a.title, a.url, a.openDate, ifnull(a.province,'') province,
+        ifnull(a.city,'') city, ifnull(a.county,'') county, ifnull(`type`,0) `type`, ifnull(rank,0) rank,
+        ifnull(redisId,0) redisId,
+        ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid
+        snatchNumber,
+        a.biddingType, a.businessType, a.edit edit, a.source,det.id `detail.id`
+        FROM ${snatchurlTable} AS a
+        LEFT JOIN ${snatchurlContentTable} AS b ON a.id = b.snatchUrlId
+        LEFT JOIN ${detailTable} AS det ON det.snatchUrlId=a.id
+        <where>
+            a.isShow = 0 AND a.url NOT LIKE #{url}
+            <if test="titleKey != null and titleKey != ''">
+                AND a.title LIKE #{titleKey}
+            </if>
+            <if test="city !=null and city != ''">
+                AND a.city = #{city}
+            </if>
+            <if test="province !=null and province != ''">
+                AND a.province = #{province}
+            </if>
+            <if test="notLike !=null and notLike != ''">
+                AND a.title NOT LIKE #{notLike}
+            </if>
+            AND a.openDate BETWEEN DATE_SUB(#{openDate},INTERVAL 3 DAY) AND DATE_SUB(#{openDate},INTERVAL -3 DAY)
+            AND a.type = #{type}
+        </where>
+        ORDER BY det.id DESC
+    </select>
+
+</mapper>

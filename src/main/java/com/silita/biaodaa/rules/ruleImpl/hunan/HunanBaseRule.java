@@ -500,7 +500,7 @@ public abstract class HunanBaseRule {
      * @param notice
      */
     public boolean handleRepeat(EsNotice notice, EsNotice historyNotice) {
-        if (notice.getRank() == 0 && historyNotice.getRank() != 0) {
+        if (notice.getRank() == 0 && historyNotice.getRank() != 0) {//新公告等级低
             // 插入新进公告(省网)，isshow = 1
             notice.setIsShow(1);
             //插入公告基本信息
@@ -513,7 +513,7 @@ public abstract class HunanBaseRule {
             return false;
         }
 
-        if (notice.getRank() != 0 && historyNotice.getRank() == 0) {
+        if (notice.getRank() != 0 && historyNotice.getRank() == 0) {//新公告等级高于历史公告
             // 插入新进公告，历史公告isshow = 1
             notice.setEdit(historyNotice.getEdit());
             handleNotRepeat(notice);
@@ -532,14 +532,13 @@ public abstract class HunanBaseRule {
 
             // 历史公告关联信息删除、编辑信息更改
             delRelationInfoAndEditDetail(notice, historyNotice);
-
             logger.info("@@@@  新公告入库，历史公告(省网)被去重 .. title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
             return true;
         }
 
         // 新进公告与历史公告都不是省网,保留市级
-        if (notice.getRank() == 1 && historyNotice.getRank() == 2) {
-            // 新公告update历史公告
+        if (notice.getRank() == 1 && historyNotice.getRank() == 2) {//新公告替换历史
+            //新公告update历史公告
             redisClear.clearRepeatNotice(historyNotice.getUuid());
 
             notice.setUuid(historyNotice.getUuid());

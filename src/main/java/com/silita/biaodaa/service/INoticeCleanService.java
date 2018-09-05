@@ -47,7 +47,7 @@ public interface INoticeCleanService {
      *
      * @param id
      */
-    void deleteSnatchUrl(String id);
+    void deleteSnatchUrl(String id,String source);
 
     /**
      *

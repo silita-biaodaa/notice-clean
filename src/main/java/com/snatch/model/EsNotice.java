@@ -2,7 +2,7 @@ package com.snatch.model;
 
 import java.io.Serializable;
 
-public class EsNotice implements Serializable{
+public class EsNotice implements Serializable,Comparable{
 
 	private static final long serialVersionUID = 1L;
 	private Integer isShow;
@@ -12,6 +12,7 @@ public class EsNotice implements Serializable{
 	private String title;
 	private String openDate;
 	private String content;
+	private String pressContent;
 	private String province;
 	private String city;
 	private String county;
@@ -40,6 +41,14 @@ public class EsNotice implements Serializable{
 	private AnalyzeDetailZhongBiao detailZhongBiao;
 
 	private Integer edit;
+
+	public String getPressContent() {
+		return pressContent;
+	}
+
+	public void setPressContent(String pressContent) {
+		this.pressContent = pressContent;
+	}
 
 	public Integer getIsShow() {
 		return isShow;
@@ -199,6 +208,11 @@ public class EsNotice implements Serializable{
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}
-	
-	
+
+
+	@Override
+	public int compareTo(Object o) {
+		EsNotice obj = (EsNotice) o;
+		return this.redisId-obj.getRedisId();
+	}
 }

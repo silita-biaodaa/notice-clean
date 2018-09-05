@@ -40,8 +40,8 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="deleteSnatchUrlById" parameterType="String">
-        DELETE FROM mishu.snatchurl WHERE id = #{id}
+    <delete id="deleteSnatchUrlById" parameterType="Map">
+        DELETE FROM ${snatchurlTable} WHERE id = #{id}
     </delete>
 
     <insert id="insertSnatchUrl" parameterType="Map">

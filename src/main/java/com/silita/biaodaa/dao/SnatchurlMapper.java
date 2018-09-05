@@ -29,9 +29,9 @@ public interface SnatchurlMapper {
 
     /**
      *
-     * @param snatchUrlId
+     * @param map
      */
-    void deleteSnatchUrlById(String snatchUrlId);
+    void deleteSnatchUrlById(Map map);
 
     /**
      *

@@ -148,9 +148,11 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      *
      * @param id
      */
-    @Override
-    public void deleteSnatchUrl(String id) {
-        snatchurlMapper.deleteSnatchUrlById(id);
+    public void deleteSnatchUrl(String id,String source) {
+        Map map = new HashMap();
+        map.put("snatchurlTable",RouteUtils.routeTableName("mishu.snatchurl",source));
+        map.put("id",id);
+        snatchurlMapper.deleteSnatchUrlById(map);
     }
 
     /**
