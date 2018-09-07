@@ -164,7 +164,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
     }
 
     /**
-     * 根据filterList关键字列表，获取关键字之前的括号内容(列表),
+         * 根据filterList关键字列表，获取关键字之前的括号内容(列表),
      * 返回列表中排除excludeList集合中的内容。
      * @param filterList
      * @param excludeList
@@ -293,7 +293,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                     matchTitleList = null;
 
                     if(matchSetList.size()<=0){
-                        isNewNotice = true;//无匹配重复公告，直接入库
+                        logger.warn("匹配队列异常：去重操作后队列丢失。");
+                        isNewNotice = true;//异常，直接入库
                     }else {
                         Set<EsNotice> sameTitleList = new TreeSet<EsNotice>();//标题一致的列表
                         Set<EsNotice> notSameTitleList = new TreeSet<EsNotice>();//标题不一样的列表
@@ -331,19 +332,23 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                             }
                         }
 
-                        if (notSameTitleList.size() > 0) {//标题不相同
-                            Iterator iter = notSameTitleList.iterator();
-                            while(iter.hasNext()) {
-                                EsNotice esnt = (EsNotice)iter.next();
-                                if (esnt.getTitle().indexOf("标段") != -1) {//标题存在标段，对比标段数
-                                    int blockIdx = title.lastIndexOf("标段");
-                                    int hisblockIdx = esnt.getTitle().lastIndexOf("标段");
-                                    if (blockIdx != -1 && hisblockIdx != -1) {
-                                        String blockStr = getNumStr(title.substring(0, blockIdx));
-                                        String hisblockStr = getNumStr(esnt.getTitle().substring(0, hisblockIdx));
-                                        if (!blockStr.equals(hisblockStr)) {
+                        //标题不相同，业务逻辑
+                        if (notSameTitleList.size() > 0) {
+                            //标段匹配判断
+                            if (title.indexOf("标段") != -1) {
+                                Iterator iter = notSameTitleList.iterator();
+                                while (iter.hasNext()) {
+                                    EsNotice esnt = (EsNotice) iter.next();
+                                    if (esnt.getTitle().indexOf("标段") != -1) {//标题存在标段，对比标段数
+                                        int blockIdx = title.lastIndexOf("标段");
+                                        int hisblockIdx = esnt.getTitle().lastIndexOf("标段");
+                                        if (blockIdx != -1 && hisblockIdx != -1) {
+                                            String blockStr = getNumStr(title.substring(0, blockIdx));
+                                            String hisblockStr = getNumStr(esnt.getTitle().substring(0, hisblockIdx));
+                                            if (!blockStr.equals(hisblockStr)) {
 //                                            notSameTitleList.remove(esnt);
-                                            iter.remove();
+                                                iter.remove();
+                                            }
                                         }
                                     }
                                 }
@@ -411,7 +416,12 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                                             }
                                         }
                                     }
-                                    isNewNotice = true;
+
+                                    if(repeatExecute.equals("replace")){//公告已做替换处理，流程结束
+                                        return true;
+                                    }else {
+                                        isNewNotice = true;
+                                    }
                                 } else {
                                     isNewNotice = true;
                                 }
