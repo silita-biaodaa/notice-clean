@@ -36,7 +36,8 @@
             AND a.openDate BETWEEN DATE_SUB(#{openDate},INTERVAL 3 DAY) AND DATE_SUB(#{openDate},INTERVAL -3 DAY)
             AND a.type = #{type}
         </where>
-        ORDER BY det.id DESC
+        ORDER BY det.id DESC,a.id DESC
+        limit 0,1000
     </select>
 
 </mapper>
