@@ -71,7 +71,7 @@
     </select>
 
     <update id="updateSnatchUrl" parameterType="Map">
-        UPDATE FROM ${snatchurlTable}
+        UPDATE ${snatchurlTable}
         SET url = #{url}, title = #{title}, openDate = #{openDate}, province = #{province}, city = #{city},
         county = #{county}, rank = #{rank}, websitePlanId = #{websitePlanId}, uuid = #{uuid}, businessType = #{businessType},
         changeNum = changeNum + 1, otherType = #{otherType}, snatchDateTime = NOW(), redisId = #{redisId}, source = #{source}

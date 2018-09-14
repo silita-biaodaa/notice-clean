@@ -27,7 +27,7 @@ public class NoticeRuleService {
         String source= (String)params.get("source");
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", source));
         params.put("snatchurlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent", source));
-
+        params.put("snatchurlPressTable", RouteUtils.routeTableName("mishu.snatchpress", source));
         String detailTable = null;
         if(type==2) {
             detailTable = "mishu.zhongbiao_detail";

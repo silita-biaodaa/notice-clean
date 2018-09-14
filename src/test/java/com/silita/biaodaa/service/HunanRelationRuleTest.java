@@ -34,4 +34,6 @@ public class HunanRelationRuleTest extends ConfigTest {
         nextIdList.add("555");
         service.batchInsertRelation(thisId,nextIdList);
     }
+
+
 }

@@ -56,6 +56,8 @@ public interface INoticeCleanService {
      */
     int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice);
 
+    void deleteSnatchrelation( EsNotice esNotice);
+
     /**
      *
      * @param esNotice

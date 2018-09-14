@@ -1,7 +1,6 @@
 package com.silita.biaodaa.disruptor.handle.notice;
 
 import com.lmax.disruptor.EventHandler;
-import com.silita.biaodaa.dao_temp.SnatchDao;
 import com.silita.biaodaa.disruptor.event.AnalyzeEvent;
 import com.silita.biaodaa.service.QuaParseService;
 import com.snatch.model.EsNotice;
@@ -17,9 +16,6 @@ import java.lang.ref.SoftReference;
 @Component
 public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
     private Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
-
-    @Autowired
-    private SnatchDao snatchDao;
 
     @Autowired
     QuaParseService quaParseService;

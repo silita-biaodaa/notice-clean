@@ -15,9 +15,11 @@
         ifnull(redisId,0) redisId,
         ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid
         snatchNumber,
-        a.biddingType, a.businessType, a.edit edit, a.source,det.id `detail.id`
+        a.biddingType, a.businessType, a.edit edit, a.source,det.id `detail.id`,
+        c.press pressContent
         FROM ${snatchurlTable} AS a
         LEFT JOIN ${snatchurlContentTable} AS b ON a.id = b.snatchUrlId
+        LEFT JOIN ${snatchurlPressTable} AS c ON a.id = c.snatchUrlId
         LEFT JOIN ${detailTable} AS det ON det.snatchUrlId=a.id
         <where>
             a.isShow = 0 AND a.url NOT LIKE #{url}

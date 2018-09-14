@@ -156,6 +156,14 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
     }
 
     /**
+     * 删除公告的关联信息
+     * @param esNotice
+     */
+    public void deleteSnatchrelation( EsNotice esNotice){
+        snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(esNotice.getUuid()));
+    }
+
+    /**
      * 删除关联并更新编辑明细
      *
      * @param esNotice
@@ -163,7 +171,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      */
     @Override
     public int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice) {
-        snatchurlRepetitionMapper.deleteSnatchurlRepetition(Long.valueOf(historyNotice.getUuid()));
+        snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(historyNotice.getUuid()));
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         params.put("url", esNotice.getUrl());
