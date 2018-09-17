@@ -644,7 +644,7 @@ public abstract class HunanBaseRule {
      * @param matchSets
      * @return
      */
-    protected String matchSetExecutor(EsNotice esNotice,Set<EsNotice> matchSets) {
+    protected String matchSetExecutor(EsNotice esNotice,Set<EsNotice> matchSets) throws Exception{
         String filterState = "";
         int type = esNotice.getType();
         if (matchSets.size() > 0) {
@@ -733,34 +733,38 @@ public abstract class HunanBaseRule {
      * @return
      */
     protected boolean replaceHistoryNotice(EsNotice notice, EsNotice historyNotice){
-        notice.setUuid(historyNotice.getUuid());
-        notice.setEdit(historyNotice.getEdit());
-        //清理页面缓存
-        redisClear.clearRepeatNotice(historyNotice.getUuid());
-        //更新基本表
-        noticeCleanService.updateSnatchUrl(notice, historyNotice.getUuid());
-        //更新内容
-        noticeCleanService.updateSnatchurlContent(notice);
-        noticeCleanService.updateSnatchpress(notice);
-        //保留历史公告进入去重表
-        noticeCleanService.insertSnatchurlRepetition(historyNotice);
-        //仅湖南数据处理es
-        if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
-            if (notice.getType() == 2) { //中标
-                try {
-                    snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
-                } catch (Exception e) {
-                    logger.error("@@@@ES中标去重更新失败" + e);
+        try {
+            notice.setUuid(historyNotice.getUuid());
+            notice.setEdit(historyNotice.getEdit());
+            //清理页面缓存
+            redisClear.clearRepeatNotice(historyNotice.getUuid());
+            //更新基本表
+            noticeCleanService.updateSnatchUrl(notice, historyNotice.getUuid());
+            //更新内容
+            noticeCleanService.updateSnatchurlContent(notice);
+            noticeCleanService.updateSnatchpress(notice);
+            //保留历史公告进入去重表
+            noticeCleanService.insertSnatchurlRepetition(historyNotice);
+            //仅湖南数据处理es
+            if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
+                if (notice.getType() == 2) { //中标
+                    try {
+                        snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
+                    } catch (Exception e) {
+                        logger.error("@@@@ES中标去重更新失败" + e);
+                    }
+                } else {
+                    try {
+                        snatchNoticeHuNanDao.updateZhaobiaoEsNotice(notice);
+                    } catch (Exception e) {
+                        logger.error("@@@@ES招标去重更新失败" + e);
+                    }
                 }
-            } else {
-                try {
-                    snatchNoticeHuNanDao.updateZhaobiaoEsNotice(notice);
-                } catch (Exception e) {
-                    logger.error("@@@@ES招标去重更新失败" + e);
-                }
+                // 历史公告关联信息删除、编辑信息更改
+                delRelationInfoAndEditDetail(notice, historyNotice);
             }
-            // 历史公告关联信息删除、编辑信息更改
-            delRelationInfoAndEditDetail(notice, historyNotice);
+        }catch(Exception e ){
+            logger.error("[reidsId:"+notice.getRedisId()+"][title:"+notice.getTitle()+"][url:"+notice.getUrl()+"]"+e,e);
         }
         logger.info("###新公告替换历史公告 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  ###");
         return true;
@@ -905,23 +909,27 @@ public abstract class HunanBaseRule {
 //        notice.setEdit(historyNotice.getEdit());
 //        handleNotRepeat(notice);
 //        noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
-        noticeCleanService.insertSnatchurlRepetition(historyNotice);
-        noticeCleanService.deleteSnatchUrl(historyNotice.getUuid(),historyNotice.getSource());
+        try {
+            noticeCleanService.insertSnatchurlRepetition(historyNotice);
+            noticeCleanService.deleteSnatchUrl(historyNotice.getUuid(), historyNotice.getSource());
 
-        if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
-            // 删除es上的历史公告索引
-            if (historyNotice.getType() == 2) {
-                // 删除中标公告索引
-                snatchNoticeHuNanDao.deleteIndexById(IdxZhongbiaoSnatch.class, historyNotice.getUuid());
-            } else {
-                // 删除招标公告索引
-                snatchNoticeHuNanDao.deleteIndexById(IdxZhaobiaoSnatch.class, historyNotice.getUuid());
+            if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
+                // 删除es上的历史公告索引
+                if (historyNotice.getType() == 2) {
+                    // 删除中标公告索引
+                    snatchNoticeHuNanDao.deleteIndexById(IdxZhongbiaoSnatch.class, historyNotice.getUuid());
+                } else {
+                    // 删除招标公告索引
+                    snatchNoticeHuNanDao.deleteIndexById(IdxZhaobiaoSnatch.class, historyNotice.getUuid());
+                }
             }
-        }
 
-        // 历史公告关联信息删除
-        delRelationInfos(historyNotice);
-        logger.info("###  历史公告被去重 .. title：" + historyNotice.getTitle() + "  ###");
+            // 历史公告关联信息删除
+            delRelationInfos(historyNotice);
+            logger.info("###  历史公告被去重 .. title：" + historyNotice.getTitle() + "  ###");
+        }catch(Exception e ){
+            logger.error("[reidsId:"+historyNotice.getRedisId()+"][title:"+historyNotice.getTitle()+"][url:"+historyNotice.getUrl()+"]"+e,e);
+        }
         return true;
     }
 

@@ -47,6 +47,10 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
         String c = n.getContent();
         c = c.replaceAll("'","\'");
         c = c.replaceAll("‘","\'");
+        c = c.replaceAll("’","\'");
+        c = c.replaceAll("\"","\\\"");
+        c = c.replaceAll("“","\\\"");
+        c = c.replaceAll("”","\\\"");
         n.setContent(c);
     }
 

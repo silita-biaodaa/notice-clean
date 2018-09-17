@@ -126,21 +126,25 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      */
     @Override
     public void insertSnatchurlRepetition(EsNotice esNotice) {
-        SnatchurlRepetition snatchurlRepetition = new SnatchurlRepetition();
-        snatchurlRepetition.setNoticeuuid(esNotice.getUuid());
-        snatchurlRepetition.setTitle(esNotice.getTitle());
-        snatchurlRepetition.setUrl(esNotice.getUrl());
         try {
-            snatchurlRepetition.setOpendate(simple.parse(esNotice.getOpenDate()));
-        } catch (ParseException e) {
+            SnatchurlRepetition snatchurlRepetition = new SnatchurlRepetition();
+            snatchurlRepetition.setNoticeuuid(esNotice.getUuid());
+            snatchurlRepetition.setTitle(esNotice.getTitle());
+            snatchurlRepetition.setUrl(esNotice.getUrl());
+            try {
+                snatchurlRepetition.setOpendate(simple.parse(esNotice.getOpenDate()));
+            } catch (ParseException e) {
+            }
+            snatchurlRepetition.setContent(esNotice.getContent());
+            snatchurlRepetition.setRank(esNotice.getRank());
+            snatchurlRepetition.setRedisid(esNotice.getRedisId());
+            snatchurlRepetition.setWebsiteplanid(esNotice.getWebsitePlanId());
+            snatchurlRepetition.setReptmethod(0);
+            snatchurlRepetition.setSource(esNotice.getSource());
+            snatchurlRepetitionMapper.insertSnatchurlRepetition(snatchurlRepetition);
+        }catch(Exception e ){
+            logger.error("[reidsId:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"][url:"+esNotice.getUrl()+"]"+e,e);
         }
-        snatchurlRepetition.setContent(esNotice.getContent());
-        snatchurlRepetition.setRank(esNotice.getRank());
-        snatchurlRepetition.setRedisid(esNotice.getRedisId());
-        snatchurlRepetition.setWebsiteplanid(esNotice.getWebsitePlanId());
-        snatchurlRepetition.setReptmethod(0);
-        snatchurlRepetition.setSource(esNotice.getSource());
-        snatchurlRepetitionMapper.insertSnatchurlRepetition(snatchurlRepetition);
     }
 
     /**
@@ -245,9 +249,8 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
     @Override
     public void insertSnatchPress(EsNotice esNotice, Integer snatchUrlId) {
         Map pressParams = new HashMap<String, Object>();
-        String text = chineseCompressUtil.getPlainText(esNotice.getContent());  //
         pressParams.put("snatchpressTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
-        pressParams.put("press", text);
+        pressParams.put("press", esNotice.getPressContent());
         pressParams.put("snatchUrlId", snatchUrlId);
         //添加整理后的公告内容
         snatchpressMapper.insertSnatchPress(pressParams);

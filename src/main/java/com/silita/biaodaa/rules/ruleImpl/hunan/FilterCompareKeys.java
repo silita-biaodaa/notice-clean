@@ -51,6 +51,7 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
             //3.对匹配队列，执行去重落地处理
             filterState = matchSetExecutor(esNotice,matchNotices);
         }catch (Exception e) {
+            filterState= "error";
             logger.error(e,e);
         }finally {
             return filterState;

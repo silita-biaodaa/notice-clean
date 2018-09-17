@@ -13,7 +13,8 @@
 
   <update id="updateSnatchpress" parameterType="Map">
       UPDATE ${snatchpressTable}
-      SET press = #{press}, snatchUrlId = #{snatchUrlId}
+      SET press = #{press}
+      WHERE snatchUrlId = #{snatchUrlId}
   </update>
 
   <select id="getSnatchpress" parameterType="Integer" resultType="com.silita.biaodaa.model.Snatchpress">
