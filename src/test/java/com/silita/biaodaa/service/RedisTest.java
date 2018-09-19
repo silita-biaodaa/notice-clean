@@ -12,6 +12,7 @@ public class RedisTest extends ConfigTest {
     @Test
     public void getAndPutTest() {
         //redisTemplate.opsForHash().put("user", "age", "20");
+        redisUtils.setObject("user","dh",1000);
         Object object = redisUtils.getString("user");
         System.out.println(object);
     }

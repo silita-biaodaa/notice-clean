@@ -56,7 +56,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
 
     @Override
     public boolean executeRule(EsNotice esNotice) {
-        logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
+        logger.info("通用去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         boolean isNewNotice = false;
         String filterState="";
         List<EsNotice> matchTitleList=null;
@@ -106,7 +106,6 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                     removeRepetitionSet(matchSet);
                 //3.执行去重逻辑，过滤内容等
 //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
-
                     filterState = repeatFilter.filterRule(esNotice,matchSet);//V1.6版本过滤规则
                 }
             }
@@ -127,13 +126,13 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 isNewNotice = false;
             }
         }catch (Exception e){
-            logger.error("###湖南去重异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
+            logger.error("###去重规则异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
             matchNoticeList = null;
             matchTitleList = null;
             matchSet=null;
             System.gc();
-            logger.info("####湖南去重结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
+            logger.info("####通用去重规则结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         }
         return isNewNotice;
     }

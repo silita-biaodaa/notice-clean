@@ -39,7 +39,8 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
                 if(keysList.isEmpty()){
                     filterState=IS_NEW;
                 }else{
-                    if(tmpKeysList.isEmpty()){
+                    if(tmpKeysList==null || tmpKeysList.isEmpty()){
+                        logger.warn("extractKeysList is null.[esNotice.title:"+esNotice.getTitle()+"][esNotice.url:"+esNotice.getUrl()+"][title:"+compareNotice.getTitle()+"][url:"+compareNotice.getUrl()+"][pressContent:"+compareNotice+"]");
                         continue;
                     }else{
                         if(compareKeysList(keysList,tmpKeysList)){
@@ -88,7 +89,7 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
      * @return
      * @throws Exception
      */
-    private List<String> extractKeysList(String content)throws Exception{
+    private static List<String> extractKeysList(String content)throws Exception{
         List<String> keysList = null;
         String moneyReg = "([1-9][\\d]{0,10}|0)(\\.[\\d]{1,6})?([元]|[万元 \\n])";
         String dateTimeReg = "([1-9]\\d{1,3}[-年]+(0[1-9]|1[0-2]|[1-9])[-月]+(0[1-9]|[1-2][0-9]|3[0-1])[日]?)|((20|21|22|23|[0]?[0-1]\\d)[:：]+[0-5]\\d([:：]?[0-5]\\d)?)";
@@ -106,7 +107,7 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
     }
 
 
-    private List<String> matchSegmentList(String str,String regex){
+    private static List<String> matchSegmentList(String str,String regex){
         List<String> resList= new TreeList();
         Pattern ptn = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
         Matcher matcher = ptn.matcher(str);

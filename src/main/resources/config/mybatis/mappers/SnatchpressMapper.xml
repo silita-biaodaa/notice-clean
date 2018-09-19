@@ -22,7 +22,7 @@
   </select>
 
   <select id="queryzh" resultType="Map">
-    select `name`,mainUUid,rank from all_zh where rank !='' and finalUuid !='' and finalUuid is not null
+    select `name`,mainUUid,rank from mishu.all_zh where rank !='' and finalUuid !='' and finalUuid is not null
   </select>
 
   <select id="queryAnalyzeRangeByField" parameterType="String" resultType="Map">

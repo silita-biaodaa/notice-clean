@@ -13,7 +13,7 @@
     </bean>
     <!-- 全国公告清洗规则 -->
     <bean id="othersCleanTemplate" class="com.silita.biaodaa.rules.templateImpl.CleaningTemplateImpl" scope="singleton" lazy-init="true" >
-        <constructor-arg name="repeatRule" ref="othersRepeatRule"/>
+        <constructor-arg name="repeatRule" ref="hunanRepeatRule"/>
         <constructor-arg name="relationRule" ref="othersRelationRule"/>
     </bean>
 </beans>

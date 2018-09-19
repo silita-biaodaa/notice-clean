@@ -1,11 +1,10 @@
 package com.silita.biaodaa.service;
 
+import com.silita.biaodaa.utils.MyStringUtils;
+import org.apache.commons.collections.list.TreeList;
 import org.junit.Test;
 
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,11 +83,36 @@ public class SingleTest {
     }
 
     @org.junit.Test
-    public void testOne(){
-        String con ="<div><p>招标公告</p><p>漳平市菁城街道Y120线顶郊至福顶改扩建工程（外环西路）监理（二次招标）</p><p>招标公告</p><p>招标编号：互华漳招字2018-008号</p><p>1.招标条件</p><p>本招标项目漳平市菁城街道Y120线顶郊至福顶改扩建工程（外环西路）监理（二次招标）（项目名称）已由有关主管部门批准建设，建设资金来自上级补助及地方自筹（资金来源），招标人为漳平市菁华路桥投资建设有限公司，委托的招标代理单位为福建互华土木工程管理有限公司。项目已具备招标条件，现对该项目进行公开招标。</p><p>2.项目概况和招标范围</p><p>2.1.建设地点：福建省漳平市</p><p>2.2建设规模：造价为44998980元，本次招标项目为漳平市菁城街道Y120线顶郊至福顶改扩建工程（外环西路）监理（二次招标）,项目起点位于顶郊村漳平电厂后门（设计起点桩号：K0+000），途经高明寺、福满新村、欧坑村、终点接于万成和平中路（设计终点桩号：K2+080），路线全长2.08公里，具体以本项目的施工图纸及经相关部门审核后公布的工程量清单、预算控制价及编制说明为准。</p><p>2.3招标范围和内容：本次招标项目为漳平市菁城街道Y120线顶郊至福顶改扩建工程（外环西路）监理（二次招标）路线总长2.08公里，主要工程内容有路基工程、路面工程、交通工程及沿线安全设施、给排水工程、电力管道等配套项目,具体以施工设计图为准。</p><p>2.4监理期限：从监理合同签订之日起到工程竣工直至工程结算审核、资料移交备案完毕（含保修期）；</p><p>2.5工程质量要求：符合国家现行《工程施工质量验收规范》合格标准。</p><p>2.6监理服务费:按国家发展和改革委员会发布的发改价格[2007]670号取费标准的70%计取，监理服务费为70.07万元。</p><p>3.投标人资格要求及审查办法</p><p>3.1.具备合格有效的《企业法人营业执照》，并具有独立法人资格。</p><p>3.2.投标人必须具备建设行政主管部门核发的监理综合资质或市政公用工程监理乙级以上（含乙级）专业资质，具备有效的监理企业资质等级证书。根据闽筑[2015]35号文《关于推动全省建筑市场统一开放的通知》的通知，福建省省外工程监理企业在福建省开展工程建设活动，实行信息登记，福建省省外工程监理企业须提供福建省住房和城乡建设厅网（www.fjjs.gov.cn）”→“企业信用档案”→“工程监理”→“省外入闽工程监理企业”中公示的查询网页（须加盖投标人公章），查询网页至少须包含“企业基本情况”网页】。</p><p>3.3.拟任总监理工程师须具备建设行政主管部门核发有效的全国注册监理工程师注册执业证书，专业要求为市政公用工程，并在本单位注册。且该总监理工程师目前无承担其他在建工程项目监理人员。本项目的总监理工程师及专业监理工程师必须是已入闽登记的人员。提供【福建省省外工程监理企业须提供福建省住房和城乡建设厅网（www.fjjs.gov.cn）”→“建筑市场综合监管信息平台的相应信息系统”→“省外入闽工程监理企业信息登记系统”→“入闽机构注册监理工程师”→“入闽机构注册监理工程师情况”中公示的查询网页（须加盖投标人公章）】。</p><p>3.4.根据《关于印发《福建省建设工程责任主体不良记录“黑名单”管理实施办法（试行）》的通知》（闽建[2016]5号）文件精神，责任主体纳入“黑名单”管理期间，在全省范围内采取以下管控措施：①对纳入省级“质量安全黑名单”的责任主体：施工、监理单位不得参与国有投资（含国有投资占主导或控股地位，下同）的房屋建筑和市政基础设施工程投标。②对纳入省级“文明施工黑名单”的责任主体：施工、监理单位不得参与国有投资的房屋建筑和市政基础设施工程投标。③对纳入省级“欠薪黑名单”的责任主体：2年内工资保证金按最高标准额度缴存。省外入闽“欠薪黑名单”企业，2年内不得在福建省建筑市场承揽新的业务；</p><p>3.5.投标人未被依法禁止投标、未存在财产被冻结或接管的情况。</p><p>3.6.本工程对投标人的资格审查采用资格后审方式，主要资格审查标准和内容详见招标文件，只有资格审查合格的投标人才有可能被授予合同。</p><p>3.7.本招标项目<i></i><i>/</i>联合体投标。</p><p>4.招标文件的获取</p><p>4.1本招标项目采用电子招投标。</p><p>4.2采用电子招投标的，凡有意参加投标者，请于2018年4月4日至2018年4月12日通过http://www.zpggzyjyzx.gov.cn（下载招标文件的网址）采用无记名方式报名。在获取报名号后，用报名号登录下载电子招标文件。本招标项目电子招标文件使用http://www.zpggzyjyzx.gov.cn上面公布的“海迈电子标书软件”最新版本打开。投标人获取电子招标文件后，应检查电子招标文件的合法有效性，合法有效的电子招标文件应具有招标人和招标代理机构的电子印章；招标人没有电子印章的，须附招标人对招标代理机构的授权书。（授权书为含有招标人单位公章的扫描件）。</p><p>注：获取到报名号，即报名成功。</p><p>4.3平台使用费200元，招标文件下载方式请看“办事指南”中的【漳平市公共资源交易中心常见问题说明第8点】</p><p>5.评标办法</p><p>本招标项目采用的评标办法：综合评标法（电子评标）。</p><p>6.投标保证金的提交</p><p>6.1投标保证金金额：人民币壹万伍仟元；</p><p>6.2投标保证金的缴交时间：2018年4月24日16时00分前；以银行实时对账单为准）。</p><p>6.3投标保证金的缴交方式：（1）应从投标人所在地银行的投标人企业基本账户以电汇或银行（网银）转账的形式交存项目投标保证金；（2）按照福建省建筑业龙头企业有关规定交存年度投标保证金；（3）龙岩市建设工程项目年度投标保证金；（4）银行保函；（5）经龙岩市住建局备案的担保公司出具的担保保函。</p><p>6.4.各投标人采用年度投标保证金或保函等形式的投标人须要用企业注册账号登录http://www.zpggzyjyzx.gov.cn使用报名号进行保证金关联操作，上传相关保函扫描证明件（扫描证明件需加盖单位公章）；通过电汇或转账缴交保证金的投标人须在规定时间内缴交保证金，且在开标签到之前确保平台登记的投标人保证金基本账户信息和企业信息正确，开标签到后平台自动关联保证金。如因投标人原因，导致保证金无法正常关联的，将无法证明投标人是否缴交保证金，若影响投标结果，投标人须承担相应责任。</p><p>7.投标文件的递交</p><p>7.1本招标项目只接受网络递交的电子投标文件，无需递交纸质文件。投标文件递交的截止时间：2018年4月25日9时00分(北京时间)，提交网址为龙岩市公共资源交易中心漳平分中心（http://www.zpggzyjyzx.gov.cn）。</p><p>7.2本项目采用电子招投标，请各投标人要在投标截止时间之前完成电子投标文件（edox固化文件格式）的递交。</p><p>7.2.1投标文件递交截止时间前，投标人可对已投递的电子投标文件撤回、编辑再投递。电子投标文件投递成功后，投标人需打印出“投标人签到凭证”。交易平台以最后一份投递成功的电子投标文件信息为准。逾期递交的或未递交到指定网址的投标文件，招标人不予受理。</p><p>7.2.2在开标当日，投标人须携带报名凭证、签到凭证（用于开标时间之前进行现场电子扫码签到）、“投标文件固化”所使用的数字证书（简称CA，下同）至现场解密。因投标人的原因未能正常签到、解密的投标文件将无法进入评审程序，按无效投标处理。</p><p>解密说明：使用CA现场解密标书，投标人需携带正确固化时所使用的CA。如若固化时使用的是企业CA，解密时亦需企业CA；若携带的是法人CA，则无法完成解密。如果带错CA，将无法进行投标文件解密，请务必携带固化时所使用的CA。</p><p>7.3身份验证及人证比对：投标人的法定代表人（应随带本人身份证及营业执照副本复印件）或其委托的代理人（应随带授权委托书及本人身份证原件）或拟派本工程的总监理工程师（携带监理工程师注册证书或岗位证书原件及身份证原件）到场核验登记（授权委托代理人和注册总监理工程师可以为同一人）。评审开始时间前完成身份验证及人证比对，逾期未进行身份验证及人证比对的，其电子投标文件按无效投标处理，将不进入评审程序。</p><p>注：如遇中心停电或其他不可抗力因素导致不能按时开标、评标的，则开标日期改期，具体开标时间由招标人、监管部门、交易中心协商确定后另行通知。</p><p>8.发布公告的媒介</p><p>本次招标公告同时在福建省公共资源交易电子公共服务平台（www.fjggfw.gov.cn）、龙岩市公共资源交易中心漳平分中心（http://www.zpggzyjyzx.gov.cn）上发布。</p><p>9.监督部门及电话：漳平市住房和城乡规划建设局电话：0597-3271007</p><p>漳平市交通运输局电话：0597-7521548</p><p>10.联系方式</p><p>招标人：漳平市菁华路桥投资建设有限公司；</p><p>地址：漳平市菁城和平中路481号；</p><p>电话：15960920698；</p><p>联系人：官先生。</p><p>招标代理机构：福建互华土木工程管理有限公司</p><p>地址：漳平市凯源锦绣名城F3幢401室，邮编：364000</p><p>电话：0597-7771891</p><p>联系人：刘女士</p><p>招标投标交易场所名称：龙岩市公共资源交易中心漳平分中心</p><p>地址：漳平市桂林街道桂北路78号</p><p>联系人及电话：童女士0597-3099686</p><p>投标保证金汇入账户</p><p>开户银行：中国<strong>建设银行股份有限公司漳平支行</strong></p><p>开户名称：龙岩市公共资源交易中心有限公司漳平分公司</p><p>帐号：35050169620709111999</p><p>2018年4月4日</p><p>友情提示:</p><p>1、关于CA证书办理、电子标书编制等相关事项，请投标企业进入漳平市公共资源交易中心平台的办事指南中查看，如有疑问请咨询厦门海迈科技股份有限公司。</p><p>2、匿名报名时，投标人报名成功后须及时记住报名号【①可用于登录漳平市公共资源交易中心平台下载电子招标文件（edox固化格式）和打印报名凭证；②可用于登入“海迈电子标书软件”打开下载的电子招标文件、导出word版招标文件和编制电子投标文件，报名号初始密码为111111】。若忘记报名号或没获取到报名号的，投标人需及时联系厦门海迈科技股份有限公司。</p></div>";
-        String regex = "([1-9][\\d]{0,10}|0)(\\.[\\d]{1,5})?";
-        regex = "([1-9]\\d{1,3}[-年]+(0[1-9]|1[0-2]|[1-9])[-月]+(0[1-9]|[1-2][0-9]|3[0-1])[日]?)|((20|21|22|23|[0]?[0-1]\\d)[:：]+[0-5]\\d([:：]?[0-5]\\d)?)";
-        replaceString(con,regex);
+    public void testOne()throws Exception{
+        String con ="<div class=\"TRS_Editor\">\n" +
+                " <div class=\"TRS_PreAppend\" style=\"overflow-x: hidden; word-break: break-all\"> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">一、项目名称：双峰县第二次全县污染源普查入户调查三方机构服务费用项目</font></span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">二、采购编号：双峰财采计</font>2018-0342</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">三、项目编号：</font></span><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\">GDHCLD-2018126 &nbsp;</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">四、采购方式：竞争性磋商</font></span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">五、采购项目预算（最高限价）：</font>458505.92元</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">六、更正内容：原磋商文件的磋商公告第二、供应商资质要求，</font>2、供应商特定资格条件2.1 “投标人必须具有建设项目环境影响评价乙级资质”现更正为“投标人必须具有建设项目环境影响评价乙级及以上资质”。</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">七、本更正公告为磋商文件的组成部分，对所涉及的上述内容作出相应调整和更正，若本公告与此前磋商文件内容有不一致之处，应以本更正公告为准，其它内容不变</font></span><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">。</font></span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\">&nbsp;</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">采购</font> <font face=\"宋体\">人：双峰县环境保护局</font></span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">联</font> <font face=\"宋体\">系</font> <font face=\"宋体\">人：罗先生</font></span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">电</font> &nbsp;&nbsp;&nbsp;<font face=\"宋体\">话：</font>0738-6821250</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">采购代理机构：国鼎和诚招标咨询有限公司</font> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">联系人：刘先生</font> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">电</font> &nbsp;<font face=\"宋体\">话：</font> 15907387900</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%\"><span style=\"font-size: 12pt; font-family: 宋体; color: rgb(53,53,53); line-height: 150%\"><font face=\"宋体\">电</font> &nbsp;&nbsp;&nbsp;<font face=\"宋体\">话：</font>0738-6827388</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"margin-bottom: 7.5pt; background: rgb(255,255,255); word-break: break-all; text-align: left; line-height: 150%; text-indent: 28pt\"><span style=\"font-size: 12pt; font-family: 宋体; background: rgb(255,255,255); color: rgb(53,53,53); line-height: 150%\">&nbsp;</span></p> \n" +
+                "  <p class=\"MsoNormal\" style=\"text-indent: 21pt\"><span style=\"font-size: 10.5pt; font-family: 'Times New Roman'\">&nbsp;</span></p> \n" +
+                " </div>\n" +
+                "</div> \n" +
+                "<div class=\"div_appendix\"> \n" +
+                "</div> \n" +
+                "<div class=\"div_picAppendix hide\" style=\"display:none\"> \n" +
+                "</div>";
+        List<String> list = extractKeysList(con);
+        for(String s:list){
+            System.out.println(s);
+        }
     }
 
     private String replaceString(String str,String regex){
@@ -101,4 +125,34 @@ public class SingleTest {
         }
         return str;
     }
+
+    private List<String> extractKeysList(String content)throws Exception{
+        List<String> keysList = null;
+        String moneyReg = "([1-9][\\d]{0,10}|0)(\\.[\\d]{1,6})?([元]|[万元 \\n])";
+        String dateTimeReg = "([1-9]\\d{1,3}[-年]+(0[1-9]|1[0-2]|[1-9])[-月]+(0[1-9]|[1-2][0-9]|3[0-1])[日]?)|((20|21|22|23|[0]?[0-1]\\d)[:：]+[0-5]\\d([:：]?[0-5]\\d)?)";
+        if(MyStringUtils.isNotNull(content)){
+            List<String> mList = matchSegmentList(content,moneyReg);
+            List<String> timeList = matchSegmentList(content,dateTimeReg);
+            if(!mList.isEmpty()){
+                keysList = mList;
+                keysList.addAll(timeList);
+            }else{
+                keysList = timeList;
+            }
+        }
+        return keysList;
+    }
+
+    private List<String> matchSegmentList(String str,String regex){
+        List<String> resList= new TreeList();
+        Pattern ptn = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
+        Matcher matcher = ptn.matcher(str);
+        String tmp=null;
+        while (matcher.find()) {
+            tmp=  matcher.group();
+            resList.add(tmp);
+        }
+        return resList;
+    }
+
 }
