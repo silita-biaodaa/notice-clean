@@ -13,23 +13,24 @@
 
   <update id="updateSnatchpress" parameterType="Map">
       UPDATE ${snatchpressTable}
-      SET press = #{press}, snatchUrlId = #{snatchUrlId}
+      SET press = #{press}
+      WHERE snatchUrlId = #{snatchUrlId}
   </update>
 
   <select id="getSnatchpress" parameterType="Integer" resultType="com.silita.biaodaa.model.Snatchpress">
-    SELECT b.press FROM snatchpress b where b.snatchUrlId = #{id} limit 1
+    SELECT b.press FROM mishu.snatchpress b where b.snatchUrlId = #{id} limit 1
   </select>
 
   <select id="queryzh" resultType="Map">
-    select `name`,mainUUid,rank from all_zh where rank !='' and finalUuid !='' and finalUuid is not null
+    select `name`,mainUUid,rank from mishu.all_zh where rank !='' and finalUuid !='' and finalUuid is not null
   </select>
 
   <select id="queryAnalyzeRangeByField" parameterType="String" resultType="Map">
-    select * from mishu_snatch.analyze_range where field=#{field}
+    select * from mishu.analyze_range where field=#{field}
   </select>
 
   <insert id="insertUnanalysis_aptitude" parameterType="Map">
-    INSERT INTO mishulog.unanalysis_aptitude(snatchUrlId, aptitude, snatchContent) VALUES(#{snatchUrlId}, #{aptitude}, #{snatchContent})
+    INSERT INTO mishu.unanalysis_aptitude(snatchUrlId, aptitude, snatchContent) VALUES(#{snatchUrlId}, #{aptitude}, #{snatchContent})
   </insert>
 
   <select id="getAptitudeDictionary" parameterType="String" resultType="Map">
@@ -43,7 +44,7 @@
   </insert>
 
   <select id="getBuildZhList" parameterType="Map" resultType="Map">
-    SELECT `name`,mainUUid,rank FROM build_zh
+    SELECT `name`,mainUUid,rank FROM mishu.build_zh
   </select>
 
   <select id="getAptitudeDictionaryList" parameterType="String" resultType="String">
@@ -55,12 +56,12 @@
   </select>
 
   <insert id="insertSnatchUrlBuild" parameterType="Map">
-    INSERT INTO snatch_url_build(contId,certificate,certificateUUid,licence) VALUES
+    INSERT INTO mishu.snatch_url_build(contId,certificate,certificateUUid,licence) VALUES
     (#{contId},#{certificate},#{certificateUUid},#{licence})
   </insert>
 
   <select id="getBuildZh" parameterType="Map" resultType="String">
-    select DISTINCT finalUUid from build_zh where mainUUid=#{muuid}
+    select DISTINCT finalUUid from mishu.build_zh where mainUUid=#{muuid}
     <if test="rank == 21">
       and rank !=21
     </if>

@@ -13,5 +13,5 @@ public interface SnatchurlRepetitionMapper {
      *
      * @param id
      */
-    void deleteSnatchurlRepetition(Long id);
+    void deleteSnatchrelation(Long id);
 }

@@ -1559,7 +1559,7 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
                 ad.getOneUUid(),
                 ad.getOneOffer(),
                 ad.getOneProjDuty(),
-                ad.getOneProjDutyUUid(),
+                ad.getOneProjDutyUuid(),
                 ad.getOneSkillDuty(),
                 ad.getOneSgy(),
                 ad.getOneAqy(),

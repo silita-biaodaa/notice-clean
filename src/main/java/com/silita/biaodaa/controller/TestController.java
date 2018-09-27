@@ -5,7 +5,6 @@ import com.silita.biaodaa.model.TUser;
 import com.silita.biaodaa.service.TestService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +26,6 @@ public class TestController {
     @Autowired
     TestService testService;
 
-    @Autowired
-    RedisTemplate redisTemplate;
 
 
     private Lock lock = new ReentrantLock();//基于底层IO阻塞考虑

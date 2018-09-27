@@ -1,22 +1,18 @@
 package com.silita.biaodaa.rules.ruleImpl.hunan;
 
-import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
-import com.silita.biaodaa.common.elastic.indexes.IdxZhongbiaoSnatch;
 import com.silita.biaodaa.rules.Interface.RepeatRule;
-import com.silita.biaodaa.service.INoticeCleanService;
-import com.silita.biaodaa.utils.ComputeResemble;
+import com.silita.biaodaa.rules.exception.MyRetryException;
+import com.silita.biaodaa.service.impl.NoticeCleanService;
 import com.silita.biaodaa.utils.MyStringUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import static com.silita.biaodaa.utils.ComputeResemble.similarDegreeWrapper;
+import static com.silita.biaodaa.utils.RuleUtils.getNumStr;
 
 /**
  * Created by dh on 2018/3/14.
@@ -26,214 +22,267 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
     private static Logger logger = Logger.getLogger(HunanRepeatRule.class);
 
     @Autowired
-    INoticeCleanService noticeCleanService;
+    FilterCompareKeys repeatFilter;
+
+    @Autowired
+    NoticeCleanService noticeCleanService;
+
+    private String getKString(EsNotice n){
+        return n.getTitle()+n.getUrl()+n.getType()+n.getPressContent()+n.getOpenDate()+n.getSource();
+    }
+
+    private void removeRepetitionSet(Set<EsNotice> matchSet){
+        List<String> kList = new ArrayList<String>();
+        Iterator iter = matchSet.iterator();
+        while(iter.hasNext()){
+            EsNotice no = (EsNotice) iter.next();
+            if(kList.contains(getKString(no))){
+                iter.remove();
+            }else{
+                kList.add(getKString(no));
+            }
+        }
+    }
+
+    private void formatContent(EsNotice n){
+        String c = n.getContent();
+        c = c.replaceAll("'","\'");
+        c = c.replaceAll("‘","\'");
+        c = c.replaceAll("’","\'");
+        c = c.replaceAll("\"","\\\"");
+        c = c.replaceAll("“","\\\"");
+        c = c.replaceAll("”","\\\"");
+        n.setContent(c);
+    }
+
+    /**
+     * 根据匹配条件从db中获取匹配队列
+     * @param esNotice
+     * @param argMap
+     * @return
+     */
+    public  Set<EsNotice> matchNoticeSet(EsNotice esNotice,Map argMap) {
+        Set<EsNotice> matchSet = null;
+        List<EsNotice> matchTitleList=null;
+        List<EsNotice> matchNoticeList =null;
+        matchTitleList = noticeRuleService.matchEsNoticeList(argMap);
+        if (matchTitleList.size() >= 0) {
+            matchSet = new TreeSet<EsNotice>(matchTitleList);
+        } else {
+            matchSet = new TreeSet<EsNotice>();
+        }
+        //匹配公告集合：地区，类型，公示时间前后3天,相似度大于80%
+        Map nonTitleKey = new HashMap(argMap);
+        nonTitleKey.remove("titleKey");
+        logger.info("$$祛除标题，匹配队列条件[argMap:" + argMap + "]");
+        matchNoticeList = noticeRuleService.matchEsNoticeList(nonTitleKey);
+        for (EsNotice notice : matchNoticeList) {
+            if (similarDegreeWrapper(esNotice.getTitle(), notice.getTitle()) > 0.8) {
+                matchSet.add(notice);
+            }
+        }
+        nonTitleKey = null;
+        matchNoticeList = null;
+        matchTitleList = null;
+        if (matchSet.size() > 0) {
+            removeRepetitionSet(matchSet);
+        }
+        return matchSet;
+    }
 
     @Override
     public boolean executeRule(EsNotice esNotice) {
-        logger.info("湖南去重开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+        logger.info("通用去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
+        boolean isNewNotice = false;
+        String filterState="";
+        Set<EsNotice> matchSet = null;//根据标题等维度匹配，疑似公告总集合
         try {
+            formatContent(esNotice);
+            String title = esNotice.getTitle();
+            String press = chineseCompressUtil.getPlainText(esNotice.getContent());
+            esNotice.setPressContent(press);
+
+            //url重复判断（已存在url直接丢弃）
             int isExist = noticeCleanService.countSnastchUrlByUrl(esNotice);
-            //url判断（已存在不入库）
             if (isExist != 0) {
-                logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + " ####");
+                logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + "[title:"+title+"][type:"+esNotice.getType()+"] ####");
                 return false;
             }
 
-            String title = esNotice.getTitle();
-            // 截取模糊匹配关键字
-            String tempTitle = subSearchTitle(title);
+            //二、去重逻辑判断
+            if(MyStringUtils.isNotNull(title) && title.length()<6){//不进行去重的,直接入库
+                filterState=IS_NEW;//进公告表
+            }else {
+                //2.1：从db中匹配疑似公告标题
+                //匹配公告集合：标题片段，地区，类型，公示时间前后3天
+                Map argMap = buildTitleMatchParam(esNotice);
+                logger.info("2.1.标题匹配队列条件[argMap:"+argMap+"]");
 
-            // 截取后的模糊匹配关键字替换 %
-            tempTitle = replaceStrSymbol(tempTitle);
-            if (MyStringUtils.isNotNull(tempTitle) && !allIsSameChars(tempTitle)) {//判断tempTitle的所有字符都一样
-                long repStartTime = System.currentTimeMillis(); // 去重开始时间
-                // 进行模糊匹配
-                String baseUri = "";
-                try {
-                    baseUri = new URI(esNotice.getUrl()).getHost();
-                } catch (URISyntaxException e) {
-                    for (String a : mainWebside) {
-                        if (esNotice.getUrl().contains(a)) {
-                            baseUri = a;
-                            break;
+                //多节点并发操作同一条historyNotice，使用乐观锁处理
+                int retryCount =3;//重试次数
+                boolean isRetry = false;
+                do{
+                    //重复匹配时，url重复判断（已存在url直接丢弃）
+                    if(isRetry) {
+                        int isExist2 = noticeCleanService.countSnastchUrlByUrl(esNotice);
+                        if (isExist2 != 0) {
+                            logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + "[title:" + title + "][type:" + esNotice.getType() + "] ####");
+                            return false;
                         }
                     }
-                }
-                if (MyStringUtils.isNull(baseUri)) {
-                    // 直接入库,更新到es
-                    handleNotRepeat(esNotice);
-                    return true;
-                }
 
-                // 标题模糊搜索公告
-                List<EsNotice> resultNotices = noticeCleanService.listEsNotice(tempTitle, baseUri, esNotice);
-
-                // set去重
-                Set<EsNotice> esNotices = new HashSet<EsNotice>(resultNotices);
-
-                // 标题相似度搜索公告
-                List<EsNotice> result2 = noticeCleanService.listEsNotice(baseUri, esNotice);
-                for (EsNotice no : result2) { // 只保留与新进公告标题80%相似度以上的
-                    if (ComputeResemble.similarDegreeWrapper(title, no.getTitle()) > 0.8) {
-                        esNotices.add(no);
-                    }
-                }
-
-                resultNotices = new ArrayList<EsNotice>(esNotices);
-                logger.info("##### 查询消耗时间：" + (System.currentTimeMillis() - repStartTime) + " ms #####");
-
-                if (resultNotices.isEmpty()) {
-                    // 直接入库,湖南数据更新到es
-                    handleNotRepeat(esNotice);
-                    return true;
-                } else if (resultNotices.size() == 1) {
-                    if (title.contains("关于") && title.indexOf("关于") == 0) {
-                        title = title.substring(2);
-                    }
-                    EsNotice historyNotice = resultNotices.get(0);
-                    String historyTitle = historyNotice.getTitle();
-                    if (historyTitle.contains("关于") && historyTitle.indexOf("关于") == 0) {
-                        historyTitle = historyTitle.substring(2);
-                    }
-                    if (title.equals(historyTitle)) { // 新进公告与数据库中标题一样
-                        // 判断是否有附件
-                        boolean historyNoticeHasFile = isHasFile(historyNotice.getContent());
-                        boolean esNoticeHasFile = isHasFile(esNotice.getContent());
-                        if (historyNoticeHasFile) {
-                            // 历史公告有附件
-                            if (esNoticeHasFile) {
-                                // 历史公告与新进公告都有附件，保留市级公告
-                                return handleRepeat(esNotice, historyNotice);
-                            } else {
-                                // 新进公告没有附件,历史公告有附件，新公告(历史公告去重)
-                                handleNotRepeat(esNotice);
-                                if (historyNotice.getRank() == 0) {
-                                    //update历史公告 isshow = 1
-                                    noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, historyNotice.getSource());
-//                                    snatchNoticeHuNanDao.updateSnatchurlisShow(historyNotice.getUuid(), 1, historyNotice.getSource());
-                                    // 删除es上的历史公告索引
-                                    if (historyNotice.getType() == 2) {
-                                        // 删除中标公告索引
-                                        snatchNoticeHuNanDao.deleteIndexById(IdxZhongbiaoSnatch.class, historyNotice.getUuid());
-                                    } else {
-                                        // 删除招标公告索引
-                                        snatchNoticeHuNanDao.deleteIndexById(IdxZhaobiaoSnatch.class, historyNotice.getUuid());
-                                    }
-                                    // 历史公告关联信息删除、编辑信息更改
-                                    delRelationInfoAndEditDetail(esNotice, historyNotice);
-
-                                    logger.info("@@@@  新公告入库，历史公告(省网)被去重 .. title：" + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-                                } else {
-                                    esNotice.setUuid(historyNotice.getUuid());
-                                    noticeCleanService.insertSnatchurlRepetition(historyNotice);
-                                    noticeCleanService.deleteSnatchUrl(historyNotice.getUuid());
-
-                                    // 历史公告关联信息删除、编辑信息更改
-                                    delRelationInfoAndEditDetail(esNotice, historyNotice);
-
-                                    logger.info("@@@@  新公告入库，历史公告被去重 .. title: " + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-                                }
-                                return true;
-                            }
+                    try {
+                        matchSet = matchNoticeSet(esNotice, argMap);//匹配队列
+                        if (matchSet.size() <= 0) {
+                            logger.info("2.3标题匹配队列为空。。条件[argMap:" + argMap + "]");
+                            filterState = IS_NEW;//异常情况，不做去重
                         } else {
-                            if (esNoticeHasFile) {
-                                // 历史公告没附件，新进公告有附件,保留历史公告(新公告进去重表)
-                                esNotice.setUuid(historyNotice.getUuid());
-                                noticeCleanService.insertSnatchurlRepetition(esNotice);
-                                logger.info("@@@@  新公告被历史公告去重 .. title: " + esNotice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-                                return false;
-                            } else {
-                            /* 历史公告与新进公告的内容处理后进行相似度对比 */
-                                // 历史公告与新进公告都没附件，判断历史公告与新进公告的内容相似度
-                                String content = esNotice.getContent();
-                                String historyContent = historyNotice.getContent();
-                                if (esNotice.getType() == 2) {
-                                    // 若为中标公告需去除<table>标签
-                                    content = MyStringUtils.excludeStringByKey(content, "<table>", "</table>");
-                                    historyContent = MyStringUtils.excludeStringByKey(historyContent, "<table>", "</table>");
-                                }
-                                content = chineseCompressUtil.getPlainText(content);
-                                content = MyStringUtils.deleteHtmlTag(content);
-                                content = content.replaceAll(" ", "");
-                                content = content.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]", "");
-                                historyContent = chineseCompressUtil.getPlainText(historyContent);
-                                historyContent = MyStringUtils.deleteHtmlTag(historyContent);
-                                historyContent = historyContent.replaceAll(" ", "");
-                                historyContent = historyContent.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]", "");
-                            /* 新进公告内容与历史公告内容相似度对比 */
-                                if (ComputeResemble.similarDegreeWrapper(content, historyContent) > 0.2) {
-                                    return handleRepeat(esNotice, historyNotice);
-                                } else {
-                                    // 直接入库
-                                    handleNotRepeat(esNotice);
-                                    return true;
-                                }
-                            }
+                            removeRepetitionSet(matchSet);
+                            //3.执行去重逻辑，过滤内容等
+    //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
+                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.6版本过滤规则
                         }
-                    } else {
-                        // 分类逻辑
-                        resultNotices = noticeFilter(esNotice, resultNotices);
+                        isRetry = false;
+                    } catch (MyRetryException rt) {
+                        retryCount--;
+                        isRetry = true;
+                        logger.warn("去重匹配数据脏读，准备重试...剩余重试次数："+retryCount+"||"+rt,rt);
                     }
-                } else {
-                    // 分类逻辑
-                    resultNotices = noticeFilter(esNotice, resultNotices);
-                }
+                }while (isRetry && retryCount>0);
+            }
 
-                if (resultNotices.isEmpty()) {
-                    // 直接入库,更新到es
-                    handleNotRepeat(esNotice);
-                    return true;
-                } else {
-                    boolean hasHightLikeNotice = false;
-                /* 新进公告内容处理 */
-                    String content = esNotice.getContent();
-                    content = chineseCompressUtil.getPlainText(content);
-                    content = MyStringUtils.deleteHtmlTag(content);
-                    content = content.replaceAll(" ", "");
-                    content = clearStrOnlyOne(title, content);
-                    content = content.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]", "");
-                    EsNotice n = new EsNotice();
-                    for (EsNotice no : resultNotices) {
-                    /* 历史公告内容处理 */
-                        String historyContent = no.getContent();
-                        historyContent = chineseCompressUtil.getPlainText(historyContent);
-                        historyContent = MyStringUtils.deleteHtmlTag(historyContent);
-                        historyContent = historyContent.replaceAll(" ", "");
-                        historyContent = clearStrOnlyOne(no.getTitle(), historyContent);
-                        historyContent = historyContent.replaceAll("[\\s~·`!！@￥$%^……&*（()）\\-——\\-_=+【\\[\\]】｛{}｝\\|、\\\\；;：:‘'“”\"，,《<。.》>、/？? ]", "");
-                        double b = 0.85;
-                        if (esNotice.getType() == 2) {
-                            // 若为中标公告只需大于20%相似度
-                            b = 0.2;
-                        }
-                    /* 新进公告内容与历史公告内容相似度对比 */
-                        if (ComputeResemble.similarDegreeWrapper(content, historyContent) > b) {
-                            hasHightLikeNotice = true;
-                            n = no;
-                            break;
-                        }
-                    }
-
-                    if (hasHightLikeNotice) {
-                        // 公告相似度大于 85%,去重
-                        return handleRepeat(esNotice, n);
-                    } else {
-                        // 直接入库
-                        handleNotRepeat(esNotice);
-                        return true;
-                    }
-                }
-            } else {
-                // 直接入库
+            if(filterState.equals(IS_NEW)){//不重复，公告直接入库，需关联
+                logger.info("公告不重复，直接入库。[title:"+title+"][type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"]");
                 handleNotRepeat(esNotice);
+                isNewNotice = true;
+            }else if(filterState.equals(IS_UPDATED)) {//已更新公告内容，无需关联
+                logger.info("公告已更新。[title:"+title+"][type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"]");
+                isNewNotice = false;
+            }else if(filterState.equals(IS_REPEATED)){//已经被去重，无需关联
+                isNewNotice = false;
+            }else {
+                logger.error("异常情况[filterState:"+filterState+"]，新公告入库。[title:"+title+"][type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"][type:"+esNotice.getType()+"]");
+                handleNotRepeat(esNotice);
+//                noticeCleanService.insertSnatchurlRepetition(esNotice);
+                isNewNotice = false;
             }
         }catch (Exception e){
-            logger.error("湖南去重异常："+e,e);
+            logger.error("###去重规则异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
-            logger.info("湖南去重结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"]" + esNotice.getTitle() + esNotice.getOpenDate());
+            matchSet=null;
+            System.gc();
+            logger.info("####通用去重规则结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
+        }
+        return isNewNotice;
+    }
+
+    /**
+     * v15去重逻辑：过滤规则。
+     * @param esNotice
+     * @param matchSet
+     * @return
+     * @throws Exception
+     */
+    private String filterV15(EsNotice esNotice,Set<EsNotice> matchSet)throws Exception{
+        String filterState = "";
+        String title = esNotice.getTitle();
+
+        Set<EsNotice> sameTitleList = new TreeSet<EsNotice>();//标题一致的列表
+        Set<EsNotice> notSameTitleList = new TreeSet<EsNotice>();//标题不一样的列表
+        for (EsNotice notice : matchSet) {
+            if (title.equals(notice.getTitle())) {
+                sameTitleList.add(notice);
+            } else {
+                notSameTitleList.add(notice);
+            }
+        }
+        matchSet = null;
+
+        String url = esNotice.getUrl();
+
+        //标题相同判断
+        if (sameTitleList.size() > 0) {
+            Iterator iter = sameTitleList.iterator();
+            while (iter.hasNext()) {
+                EsNotice esnt = (EsNotice)iter.next();
+                if (extractUrlHost(url).equals(extractUrlHost(esnt.getUrl()))) {//网站相同
+                    //判断公告内容是否一致
+                    String esntPress = chineseCompressUtil.getPlainText(esnt.getContent());
+                    if (esntPress != null && esNotice.getPressContent() != null
+                            && esntPress.equals(esNotice.getPressContent())) {
+                        //保留新进来的公告,替换历史公告
+                        filterState=IS_UPDATED;
+                        noticeCleanService.replaceHistoryNotice(esnt, esNotice);
+                    } else {
+                        //公告入库
+                        filterState=IS_NEW;
+                    }
+                } else {
+                    //网站不一致,公告入库
+                    filterState=IS_NEW;
+                }
+            }
         }
 
-        return true;
+        //标题不相同，业务逻辑
+        if (notSameTitleList.size() > 0) {
+            //标段匹配判断
+            if (title.indexOf("标段") != -1) {
+                Iterator iter = notSameTitleList.iterator();
+                while (iter.hasNext()) {
+                    EsNotice esnt = (EsNotice) iter.next();
+                    if (esnt.getTitle().indexOf("标段") != -1) {//标题存在标段，对比标段数
+                        int blockIdx = title.lastIndexOf("标段");
+                        int hisblockIdx = esnt.getTitle().lastIndexOf("标段");
+                        if (blockIdx != -1 && hisblockIdx != -1) {
+                            String blockStr = getNumStr(title.substring(0, blockIdx));
+                            String hisblockStr = getNumStr(esnt.getTitle().substring(0, hisblockIdx));
+                            if (!blockStr.equals(hisblockStr)) {
+//                                            notSameTitleList.remove(esnt);
+                                iter.remove();
+                            }
+                        }
+                    }
+                }
+            }
+
+            List<Map> filterList1 = noticeRuleService.queryRulesByType("repeat_filter1");
+            List<Map> filterList2 = noticeRuleService.queryRulesByType("repeat_filter2");
+            //根据关键字匹配新进公告标题：获取前序括号内容，
+            List<String> titleSegments = filterSegment(filterList1, title, filterList2);
+            if (titleSegments != null && titleSegments.size() > 0) {
+                //新进公告标题的括号内容在历史公告中必须都存在才进行去重
+                Iterator notSameIter = notSameTitleList.iterator();
+                while (notSameIter.hasNext()) {
+                    EsNotice esnt = (EsNotice) notSameIter.next();
+                    List<String> matchTitleSegments = filterSegment(filterList1, esnt.getTitle(), filterList2);
+                    if (matchTitleSegments != null && matchTitleSegments.size() > 0) {
+                        for (String titleSeg : titleSegments) {
+                            boolean tempMatch = false;
+                            for (String mTitleSeg : matchTitleSegments) {
+                                if (mTitleSeg.equals(titleSeg)) {
+                                    tempMatch = true;
+                                }
+                            }
+                            if (!tempMatch) {
+                                notSameIter.remove();
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                filterState =matchSetExecutor(esNotice,notSameTitleList);
+
+            } else {//无有效括号内容的
+                filterState = IS_NEW;
+            }
+        }else{
+            filterState = IS_NEW;
+        }
+        return filterState;
     }
+
+
 
 }

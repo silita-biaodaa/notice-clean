@@ -2,13 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.silita.biaodaa.dao.SnatchurlMapper">
     <select id="getSnatchUrlCountByUrl" parameterType="Map" resultType="com.silita.biaodaa.model.SnatchUrl">
-        SELECT * FROM mishu.snatchurl WHERE url = #{url} AND openDate = #{openDate}
+        SELECT * FROM  ${snatchurlTable} WHERE url = #{url} AND openDate = #{openDate}
     </select>
 
     <select id="listSnatchUrl" parameterType="Map" resultType="com.snatch.model.EsNotice">
         SELECT a.id uuid, a.title, a.url, a.openDate, ifnull(a.province,'') province,
-        ifnull(a.city,'') city, ifnull(a.county,'') county, ifnull(`type`,0) `type`, ifnull(rank,0) rank, ifnull(redisId,0) redisId,
-        ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid snatchNumber,
+        ifnull(a.city,'') city, ifnull(a.county,'') county, ifnull(`type`,0) `type`, ifnull(rank,0) rank,
+        ifnull(redisId,0) redisId,
+        ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid
+        snatchNumber,
         a.biddingType, a.businessType, a.edit edit, a.source
         FROM ${snatchurlTable} AS a
         LEFT JOIN ${snatchurlContentTable} AS b ON a.id = b.snatchUrlId
@@ -38,8 +40,10 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="deleteSnatchUrlById" parameterType="String">
-        DELETE FROM mishu.snatchurl WHERE id = #{id}
+    <delete id="deleteSnatchUrlById" parameterType="Map">
+        DELETE FROM ${snatchurlTable}
+        WHERE id = #{id}
+          AND redisId = #{redisId}
     </delete>
 
     <insert id="insertSnatchUrl" parameterType="Map">
@@ -69,12 +73,45 @@
     </select>
 
     <update id="updateSnatchUrl" parameterType="Map">
-        UPDATE FROM ${snatchurlTable}
+        UPDATE ${snatchurlTable}
         SET url = #{url}, title = #{title}, openDate = #{openDate}, province = #{province}, city = #{city},
         county = #{county}, rank = #{rank}, websitePlanId = #{websitePlanId}, uuid = #{uuid}, businessType = #{businessType},
         changeNum = changeNum + 1, otherType = #{otherType}, snatchDateTime = NOW(), redisId = #{redisId}, source = #{source}
         WHERE id = #{id}
+          AND redisId = #{hisRedisId}
     </update>
 
 
+    <select id="listESZhaoBiaoDateByOpenDate" parameterType="String" resultType="Map">
+        SELECT s.id, s.url, s.openDate, s.title, cc.certificate,
+        cc.certificateUuid, s.edit, d.pbMode, d.projDq, d.projXs,
+        d.projType, d.tbEndDate, d.projSum, p.press, s.biddingType,
+        d.bmSite, d.bmEndDate, s.otherType, s.province, s.city,
+        s.county, s.type, s.tableName
+        FROM mishu.snatchurl s
+        LEFT JOIN mishu.zhaobiao_detail d ON s.id = d.snatchUrlId
+        LEFT JOIN mishu.snatchpress p ON d.snatchUrlId = p.snatchUrlId
+        LEFT JOIN (SELECT cert.contId as id, GROUP_CONCAT(cert.certificate) AS certificate, certificateUuid
+                    FROM mishu.snatch_url_cert cert
+                    WHERE cert.contId IN (
+                      SELECT s1.id
+                      FROM mishu.snatchurl s1
+                      LEFT JOIN mishu.zhaobiao_detail d ON s1.id = d.snatchUrlId
+                      LEFT JOIN mishu.snatchpress p ON d.snatchUrlId = p.snatchUrlId
+                      WHERE s1.type = 0 AND s1.isShow = 0 AND s1.openDate >= #{openDate}
+                    )
+        GROUP BY cert.contId) cc ON cc.id=s.id
+        WHERE s.type = 0 AND s.isShow = 0 AND s.openDate >= #{openDate}
+    </select>
+
+    <select id="listESZhongBiaoDateByOpenDate" parameterType="String" resultType="Map">
+        SELECT s.id, s.url, s.title, d.projDq, d.projType,
+        d.pbMode, s.edit, d.projSum, p.press, s.openDate,
+        d.projXs, d.oneName, s.province, s.city, s.county,
+        s.type, s.tableName
+        FROM mishu.snatchurl s
+        LEFT JOIN mishu.zhongbiao_detail d ON s.id = d.snatchUrlId
+        LEFT JOIN mishu.snatchpress p ON d.snatchUrlId = p.snatchUrlId
+        WHERE s.type = 2 AND s.isShow = 0 AND s.openDate >= #{openDate}
+    </select>
 </mapper>

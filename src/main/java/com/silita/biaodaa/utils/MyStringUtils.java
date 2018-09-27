@@ -188,10 +188,21 @@ public class MyStringUtils {
 		return res;
 	}
 
-
+	public static String reduceString(String str,int max){
+		if(str !=null ) {
+			if(str.length()>max) {
+				return str.substring(0, max - 3) + "...";
+			}else{
+				return str;
+			}
+		}else{
+			return null;
+		}
+	}
 
 	public static void main(String [] args){
-		System.out.println(parseWebSiteUrl("http://ggzy.xiangtan.gov.cn/project/4481.jspx?channelId=78?type=cg_qita&openDate=2018-05-21"));
+		System.out.println(reduceString("可是打飞机上岛咖啡1",10));
+//		System.out.println(parseWebSiteUrl("http://ggzy.xiangtan.gov.cn/project/4481.jspx?channelId=78?type=cg_qita&openDate=2018-05-21"));
 //		Long startTime= System.currentTimeMillis();
 //		String tiele="平遥县喜村至赵村公路改造工程施工招标公告";
 //		String titleTemp1 = MyStringUtils.excludeStringByKey(tiele,"【","】");
@@ -207,5 +218,7 @@ public class MyStringUtils {
 //		System.out.print(endTime-startTime);
 //
 	}
+
+
 
 }

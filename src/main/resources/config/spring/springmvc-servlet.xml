@@ -30,7 +30,7 @@
 
     <mvc:default-servlet-handler/>
 
-    <mvc:view-controller path="/" view-name="index"/>
+    <!--<mvc:view-controller path="/" view-name="index"/>-->
 
     <!-- 总错误处理 -->
     <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">

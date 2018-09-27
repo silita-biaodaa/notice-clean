@@ -1,6 +1,5 @@
 package com.silita.biaodaa.rules.templateImpl;
 
-import com.silita.biaodaa.common.Constant;
 import com.silita.biaodaa.rules.Interface.CleaningTemplate;
 import com.silita.biaodaa.rules.Interface.RelationRule;
 import com.silita.biaodaa.rules.Interface.RepeatRule;
@@ -55,14 +54,14 @@ public class CleaningTemplateImpl implements CleaningTemplate {
             logger.info(esNotice.getRedisId()+"##### title:"+title+",关联结束，消耗时间："+( System.currentTimeMillis()-startTime)+"ms #####" +
                     "当前jvm内存用量："+endTotal+"MB,关联增加内存"+(endTotal-startTotal)+"MB");
 
-            //3.变更关联的公告发送信息
-            //TODO:后续收藏数据需要增加source路由字段
-            //仅支持湖南数据
-            if(esNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
-                if (relationMap != null && relationMap.size() > 0) {
-                    messagePushService.queryCollectNotice(relationMap, esNotice.getUrl());
-                }
-            }
+//            //3.变更关联的公告发送信息
+//            //TODO:后续收藏数据需要增加source路由字段
+//            //仅支持湖南数据
+//            if(esNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
+//                if (relationMap != null && relationMap.size() > 0) {
+//                    messagePushService.queryCollectNotice(relationMap, esNotice.getUrl());
+//                }
+//            }
         }
         esNotice =null;
     }

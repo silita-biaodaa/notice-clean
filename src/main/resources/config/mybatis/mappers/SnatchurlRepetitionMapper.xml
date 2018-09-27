@@ -12,7 +12,7 @@
       )
     </insert>
 
-    <delete id="deleteSnatchurlRepetition" parameterType="Long">
+    <delete id="deleteSnatchrelation" parameterType="Long">
         DELETE FROM mishu.snatchrelation WHERE mainId = #{id} OR nextId = #{id}
     </delete>
 </mapper>

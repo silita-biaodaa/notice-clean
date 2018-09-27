@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.silita.biaodaa.dao.ZhongbiaoDetailMapper" >
+
   <update id="updateZhongbiaoDetail" parameterType="Map">
-    UPDATE mishu.zhongbiao_detail SET snatchUrlId = #{snatchUrlId} WHERE snatchUrlId = #{historyId}
+      UPDATE mishu.zhongbiao_detail SET snatchUrlId = #{snatchUrlId} WHERE snatchUrlId = #{historyId}
   </update>
+
+  <select id="getOneNameLength" parameterType="Integer" resultType="Integer">
+      SELECT IFNULL(LENGTH(GROUP_CONCAT(oneName)),0) FROM mishu.zhongbiao_detail d WHERE snatchUrlId = #{snatchUrlId}
+  </select>
+
+  <select id="getMegerOneName" parameterType="Integer" resultType="String">
+      SELECT GROUP_CONCAT(oneName) FROM mishu.zhongbiao_detail d WHERE snatchUrlId = #{snatchUrlId}
+  </select>
 </mapper>

@@ -1,10 +1,14 @@
 package com.silita.biaodaa.service.impl;
 
-import com.fasterxml.jackson.databind.util.ObjectIdMap;
+import com.silita.biaodaa.common.Constant;
+import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
+import com.silita.biaodaa.common.elastic.indexes.IdxZhongbiaoSnatch;
+import com.silita.biaodaa.common.redis.RedisClear;
 import com.silita.biaodaa.dao.*;
+import com.silita.biaodaa.dao_temp.SnatchNoticeHuNanDao;
 import com.silita.biaodaa.model.SnatchUrl;
 import com.silita.biaodaa.model.SnatchurlRepetition;
-import com.silita.biaodaa.service.INoticeCleanService;
+import com.silita.biaodaa.rules.exception.MyRetryException;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.RouteUtils;
 import com.snatch.model.AnalyzeDetail;
@@ -20,8 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.silita.biaodaa.utils.MyStringUtils.reduceString;
+
 @Service("noticeCleanService")
-public class NoticeCleanServiceImpl implements INoticeCleanService {
+public class NoticeCleanService {
 
     @Autowired
     private SnatchurlMapper snatchurlMapper;
@@ -42,12 +48,15 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
     @Autowired
     private SnatchUrlCertMapper snatchUrlCertMapper;
 
-    private Logger logger = Logger.getLogger(NoticeCleanServiceImpl.class);
+    @Autowired
+    protected SnatchNoticeHuNanDao snatchNoticeHuNanDao;
+
+    private Logger logger = Logger.getLogger(NoticeCleanService.class);
 
     ChineseCompressUtil chineseCompressUtil = new ChineseCompressUtil();
     SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM-dd");
 
-    @Override
+    
     /**
      * 根据url判断公告是否存在
      * @param esNotice
@@ -56,8 +65,9 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         Map params = new HashMap<String, Object>();
         params.put("url", esNotice.getUrl());
         params.put("openDate", esNotice.getOpenDate());
-        SnatchUrl vo = snatchurlMapper.getSnatchUrlCountByUrl(params);
-        if (vo != null) {
+        params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
+        List<SnatchUrl> vo = snatchurlMapper.getSnatchUrlCountByUrl(params);
+        if (vo != null && vo.size()>0) {
             return 1;
         }
         return 0;
@@ -71,7 +81,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      * @param esNotice
      * @return
      */
-    @Override
+
     public List<EsNotice> listEsNotice(String tempTitle, String url, EsNotice esNotice) {
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
@@ -86,7 +96,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         return esNotices;
     }
 
-    @Override
+
     public List<EsNotice> listEsNotice(String url, EsNotice esNotice) {
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
@@ -107,7 +117,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      * @param isShow
      * @param source
      */
-    @Override
     public void updateIsShowById(String id, int isShow, String source) {
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", source));
@@ -122,23 +131,26 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      * @param esNotice
      * @throws ParseException
      */
-    @Override
     public void insertSnatchurlRepetition(EsNotice esNotice) {
-        SnatchurlRepetition snatchurlRepetition = new SnatchurlRepetition();
-        snatchurlRepetition.setNoticeuuid(esNotice.getUuid());
-        snatchurlRepetition.setTitle(esNotice.getTitle());
-        snatchurlRepetition.setUrl(esNotice.getUrl());
         try {
-            snatchurlRepetition.setOpendate(simple.parse(esNotice.getOpenDate()));
-        } catch (ParseException e) {
+            SnatchurlRepetition snatchurlRepetition = new SnatchurlRepetition();
+            snatchurlRepetition.setNoticeuuid(esNotice.getUuid());
+            snatchurlRepetition.setTitle(esNotice.getTitle());
+            snatchurlRepetition.setUrl(esNotice.getUrl());
+            try {
+                snatchurlRepetition.setOpendate(simple.parse(esNotice.getOpenDate()));
+            } catch (ParseException e) {
+            }
+            snatchurlRepetition.setContent(esNotice.getContent());
+            snatchurlRepetition.setRank(esNotice.getRank());
+            snatchurlRepetition.setRedisid(esNotice.getRedisId());
+            snatchurlRepetition.setWebsiteplanid(esNotice.getWebsitePlanId());
+            snatchurlRepetition.setReptmethod(0);
+            snatchurlRepetition.setSource(esNotice.getSource());
+            snatchurlRepetitionMapper.insertSnatchurlRepetition(snatchurlRepetition);
+        }catch(Exception e ){
+            logger.error("[reidsId:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"][url:"+esNotice.getUrl()+"]"+e,e);
         }
-        snatchurlRepetition.setContent(esNotice.getContent());
-        snatchurlRepetition.setRank(esNotice.getRank());
-        snatchurlRepetition.setRedisid(esNotice.getRedisId());
-        snatchurlRepetition.setWebsiteplanid(esNotice.getWebsitePlanId());
-        snatchurlRepetition.setReptmethod(0);
-        snatchurlRepetition.setSource(esNotice.getSource());
-        snatchurlRepetitionMapper.insertSnatchurlRepetition(snatchurlRepetition);
     }
 
     /**
@@ -146,9 +158,20 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      *
      * @param id
      */
-    @Override
-    public void deleteSnatchUrl(String id) {
-        snatchurlMapper.deleteSnatchUrlById(id);
+    public int deleteSnatchUrl(String id,String source,int redisId) {
+        Map map = new HashMap();
+        map.put("snatchurlTable",RouteUtils.routeTableName("mishu.snatchurl",source));
+        map.put("id",id);
+        map.put("redisId",redisId);
+        return snatchurlMapper.deleteSnatchUrlById(map);
+    }
+
+    /**
+     * 删除公告的关联信息
+     * @param esNotice
+     */
+    public void deleteSnatchrelation( EsNotice esNotice){
+        snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(esNotice.getUuid()));
     }
 
     /**
@@ -157,9 +180,8 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      * @param esNotice
      * @param historyNotice
      */
-    @Override
     public int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice) {
-        snatchurlRepetitionMapper.deleteSnatchurlRepetition(Long.valueOf(historyNotice.getUuid()));
+        snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(historyNotice.getUuid()));
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         params.put("url", esNotice.getUrl());
@@ -184,84 +206,11 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         return noticeId;
     }
 
-    /**
-     * 添加公共基本信息、及公共内容
-     *
-     * @param esNotice
-     * @return
-     */
-    @Override
-    public Map<String, String> insertNotice(EsNotice esNotice) {
-        Map snatchurlParams = new HashMap<String, Object>();
-        snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        snatchurlParams.put("url", esNotice.getUrl());
-        snatchurlParams.put("title", esNotice.getTitle());
-//        snatchurlParams.put("snatchDatetime", NOW());
-//        snatchurlParams.put("snatchPlanId", 2);
-        snatchurlParams.put("type", esNotice.getType());
-//        snatchurlParams.put("status", 0);
-//        snatchurlParams.put("openDate", DATE_FORMAT(esNotice.getOpenDate(),'%Y-%m-%d') );
-        snatchurlParams.put("openDate", esNotice.getOpenDate());
-//        snatchurlParams.put("range", YEAR(esNotice.getOpenDate()));
-        snatchurlParams.put("edit", esNotice.getEdit() == null ? 0 : esNotice.getEdit());
-//        snatchurlParams.put("randomNum", 0);
-        snatchurlParams.put("biddingType", esNotice.getBiddingType() == null ? 0 : Integer.parseInt(esNotice.getBiddingType()));
-        snatchurlParams.put("otherType", esNotice.getOtherType() == null ? 0 : Integer.parseInt(esNotice.getOtherType()));
-        snatchurlParams.put("tableName", "mishu.snatchurl");
-//        snatchurlParams.put("suuid", REPLACE(UUID(),'-',''));
-        snatchurlParams.put("province", esNotice.getProvince());
-        snatchurlParams.put("city", esNotice.getCity());
-        snatchurlParams.put("county", esNotice.getCounty());
-        snatchurlParams.put("rank", esNotice.getRank());
-        snatchurlParams.put("redisId", esNotice.getRedisId());
-        snatchurlParams.put("websitePlanId", esNotice.getWebsitePlanId());
-        snatchurlParams.put("uuid", esNotice.getSnatchNumber());
-        snatchurlParams.put("businessType", esNotice.getBusinessType());
-        snatchurlParams.put("source", esNotice.getSource());
-        snatchurlParams.put("isShow", esNotice.getIsShow() == null ? 0 : esNotice.getIsShow());
-        //添加公告基本信息
-        snatchurlMapper.insertSnatchUrl(snatchurlParams);
-
-        Map maxIdparams = new HashMap<String, Object>();
-        maxIdparams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        maxIdparams.put("url", esNotice.getUrl());
-        //获取刚才基本信息Id
-        Integer id = snatchurlMapper.getMaxIdByUrl(maxIdparams);
-
-        Map contentParams = new HashMap<String, Object>();
-        contentParams.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent", esNotice));
-        contentParams.put("content", esNotice.getContent());
-        contentParams.put("snatchUrlId", id);
-        //添加公告内容
-        snatchurlcontentMapper.insertSnatchurlContent(contentParams);
-
-        Map pressParams = new HashMap<String, Object>();
-        String text = chineseCompressUtil.getPlainText(esNotice.getContent());  //
-        pressParams.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
-        pressParams.put("content", text);
-        pressParams.put("snatchUrlId", id);
-        //添加整理后的公告内容
-        snatchpressMapper.insertSnatchPress(pressParams);
-
-        Map updateSnatchurlParams = new HashMap<String, ObjectIdMap>();
-        snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice.getSource()));
-        snatchurlParams.put("status", 1);
-        //更新公告基本信息状态
-        snatchurlMapper.updateSnatchUrlById(updateSnatchurlParams);
-
-        Map<String, String> map = new HashMap<String, String>();    //用于ES更新
-        map.put("id", String.valueOf(id));
-        map.put("otherType", esNotice.getOtherType());
-        map.put("biddingType", esNotice.getBiddingType());
-        return map;
-    }
-
-    @Override
     public void insertSnatchUrl(EsNotice esNotice) {
         Map snatchurlParams = new HashMap<String, Object>();
         snatchurlParams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
         snatchurlParams.put("url", esNotice.getUrl());
-        snatchurlParams.put("title", esNotice.getTitle());
+        snatchurlParams.put("title", reduceString(esNotice.getTitle(),100));
         snatchurlParams.put("type", esNotice.getType());
         snatchurlParams.put("openDate", esNotice.getOpenDate());
         snatchurlParams.put("edit", esNotice.getEdit() == null ? 0 : esNotice.getEdit());
@@ -283,7 +232,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         logger.info("########新插入公告：[source:"+esNotice.getSource()+"][isShow:"+esNotice.getIsShow()+"][title:"+esNotice.getTitle()+"][redis:"+esNotice.getRedisId()+"][type:"+esNotice.getType()+"][url:"+esNotice.getUrl()+"]");
     }
 
-    @Override
     public Integer getMaxSnatchUrlIdByUrl(EsNotice esNotice) {
         Map maxIdparams = new HashMap<String, Object>();
         maxIdparams.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
@@ -292,7 +240,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         return snatchurlMapper.getMaxIdByUrl(maxIdparams);
     }
 
-    @Override
     public void insertSnatchContent(EsNotice esNotice, Integer snatchUrlId) {
         Map contentParams = new HashMap<String, Object>();
         contentParams.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent", esNotice));
@@ -302,12 +249,10 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         snatchurlcontentMapper.insertSnatchurlContent(contentParams);
     }
 
-    @Override
     public void insertSnatchPress(EsNotice esNotice, Integer snatchUrlId) {
         Map pressParams = new HashMap<String, Object>();
-        String text = chineseCompressUtil.getPlainText(esNotice.getContent());  //
         pressParams.put("snatchpressTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
-        pressParams.put("press", text);
+        pressParams.put("press", esNotice.getPressContent());
         pressParams.put("snatchUrlId", snatchUrlId);
         //添加整理后的公告内容
         snatchpressMapper.insertSnatchPress(pressParams);
@@ -320,7 +265,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
      *
      * @param esNotice
      */
-    @Override
     public void insertDetail(EsNotice esNotice) {
         if (esNotice.getType() == 2) {
             //中标
@@ -341,7 +285,6 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         }
     }
 
-    @Override
     public void updateSnatchUrlCert(Integer id, Integer historyId) {
         Map params = new HashMap<String, Object>();
         params.put("id", id);
@@ -349,8 +292,7 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         snatchUrlCertMapper.updateSnatchurlCert(params);
     }
 
-    @Override
-    public void updateSnatchUrl(EsNotice esNotice, String uuid) {
+    public int updateSnatchUrl(EsNotice esNotice,EsNotice historyNotice) {
         Map params = new HashMap<String, Object>();
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl",esNotice));
         params.put("url", esNotice.getUrl());
@@ -367,26 +309,138 @@ public class NoticeCleanServiceImpl implements INoticeCleanService {
         params.put("otherType", esNotice.getOtherType());
         params.put("redisId", esNotice.getRedisId());
         params.put("source", esNotice.getSource());
-        params.put("id", uuid);
-        snatchurlMapper.updateSnatchUrl(params);
+        params.put("id", historyNotice.getUuid());
+        params.put("hisRedisId",historyNotice.getRedisId());
+        return snatchurlMapper.updateSnatchUrl(params);
     }
 
-    @Override
-    public void updateSnatchurlContent(EsNotice esNotice) {
+    public int updateSnatchurlContent(EsNotice esNotice) {
         Map params = new HashMap<String, Object>();
         params.put("snatchUrlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent",esNotice));
         params.put("content", esNotice.getContent());
         params.put("snatchUrlId", esNotice.getUuid());
-        snatchurlcontentMapper.updateSnatchurlContent(params);
+        return snatchurlcontentMapper.updateSnatchurlContent(params);
     }
 
-    @Override
-    public void updateSnatchpress(EsNotice esNotice) {
+    public int updateSnatchpress(EsNotice esNotice) {
         Map params = new HashMap<String, Object>();
         params.put("snatchpressTable", RouteUtils.routeTableName("mishu.snatchpress",esNotice));
-        params.put("press", chineseCompressUtil.getPlainText(esNotice.getContent()));
+        params.put("press", esNotice.getPressContent());
         params.put("snatchUrlId", esNotice.getUuid());
-        snatchpressMapper.updateSnatchpress(params);
+        return snatchpressMapper.updateSnatchpress(params);
+    }
+
+    @Autowired
+    protected RedisClear redisClear;
+
+    /**
+     * 新进公告替换历史公告，保留历史公告进入去重表
+     * @param notice
+     * @param historyNotice
+     * @return
+     */
+    public boolean replaceHistoryNotice(EsNotice notice, EsNotice historyNotice)throws Exception{
+        notice.setUuid(historyNotice.getUuid());
+        notice.setEdit(historyNotice.getEdit());
+        //更新基本表
+        int baseMatch = updateSnatchUrl(notice,historyNotice);
+        if(baseMatch !=1){
+            throw new MyRetryException("更新基本表失败[hisRedisid:"+historyNotice.getRedisId()+"][his.title:"+historyNotice.getTitle()+"][his.source:"+historyNotice.getSource()+"]");
+        }
+        //更新内容
+        int contentMatch = updateSnatchurlContent(notice);
+        //更新压缩内容
+        int pressMatch = updateSnatchpress(notice);
+        logger.info("新进公告替换历史公告.[hisRedisid:"+historyNotice.getRedisId()+"][contentMatch:"+contentMatch+"][pressMatch:"+pressMatch+"]");
+
+        try {
+            //保留历史公告进入去重表
+            insertSnatchurlRepetition(historyNotice);
+            //仅湖南数据处理es,清洗缓存等
+            if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
+                // 历史公告关联信息删除、编辑信息更改
+                delRelationInfoAndEditDetail(notice, historyNotice);
+                //清理页面缓存
+                redisClear.clearRepeatNotice(historyNotice.getUuid());
+                if (notice.getType() == 2) { //中标
+                    try {
+                        snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
+                    } catch (Exception e) {
+                        logger.error("@@@@ES中标去重更新失败" + e);
+                    }
+                } else {
+                    try {
+                        snatchNoticeHuNanDao.updateZhaobiaoEsNotice(notice);
+                    } catch (Exception e) {
+                        logger.error("@@@@ES招标去重更新失败" + e);
+                    }
+                }
+            }
+        }catch(Exception e ){
+            logger.error("[reidsId:"+notice.getRedisId()+"][title:"+notice.getTitle()+"][url:"+notice.getUrl()+"]"+e,e);
+        }
+        logger.info("###新公告替换历史公告 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  ###");
+        return true;
+    }
+
+    /**
+     * 历史公告关联信息删除、编辑信息更改
+     *
+     * @param notice
+     * @param historyNotice
+     */
+    public void delRelationInfoAndEditDetail(EsNotice notice, EsNotice historyNotice) {
+        redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
+        int noticeId = deleteRepetitionAndUpdateDetail(notice, historyNotice);
+        // 资质信息修改
+        updateSnatchUrlCert(noticeId, Integer.valueOf(historyNotice.getUuid()));
+    }
+
+    /**
+     * 历史公告删除
+     * @param historyNotice
+     * @return
+     */
+    public boolean delHistoryNotice( EsNotice historyNotice)throws MyRetryException{
+//        // 插入新进公告，历史公告isshow = 1
+//        notice.setEdit(historyNotice.getEdit());
+//        handleNotRepeat(notice);
+//        noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
+        try {
+            int match = deleteSnatchUrl(historyNotice.getUuid(), historyNotice.getSource(),historyNotice.getRedisId());
+            if(match==1) {
+                insertSnatchurlRepetition(historyNotice);
+                if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
+                    // 历史公告关联信息删除
+                    delRelationInfos(historyNotice);
+                    // 删除es上的历史公告索引
+                    if (historyNotice.getType() == 2) {
+                        // 删除中标公告索引
+                        snatchNoticeHuNanDao.deleteIndexById(IdxZhongbiaoSnatch.class, historyNotice.getUuid());
+                    } else {
+                        // 删除招标公告索引
+                        snatchNoticeHuNanDao.deleteIndexById(IdxZhaobiaoSnatch.class, historyNotice.getUuid());
+                    }
+                }
+                logger.info("###  历史公告被去重 .. title：" + historyNotice.getTitle() + "  ###");
+            }else{
+                throw new MyRetryException("历史公告删除失败[hisRedisid:"+historyNotice.getRedisId()+"][his.title:"+historyNotice.getTitle()+"][his.source:"+historyNotice.getSource()+"]");
+            }
+        }catch (MyRetryException rt) {
+            throw rt;
+        }catch (Exception e ){
+            logger.error("[reidsId:"+historyNotice.getRedisId()+"][title:"+historyNotice.getTitle()+"][url:"+historyNotice.getUrl()+"]"+e,e);
+        }
+        return true;
+    }
+
+    /**
+     * 删除公告的关联信息
+     * @param esNotice
+     */
+    public void delRelationInfos(EsNotice esNotice){
+        redisClear.clearGonggaoRelation(esNotice.getUuid());   //清理公告关联信息缓存
+        deleteSnatchrelation(esNotice);
     }
 
 }

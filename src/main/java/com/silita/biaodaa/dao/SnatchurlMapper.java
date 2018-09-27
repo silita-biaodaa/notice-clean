@@ -12,7 +12,7 @@ public interface SnatchurlMapper {
      * @param map
      * @return
      */
-    SnatchUrl getSnatchUrlCountByUrl(Map map);
+    List<SnatchUrl> getSnatchUrlCountByUrl(Map map);
 
     /**
      *
@@ -29,9 +29,9 @@ public interface SnatchurlMapper {
 
     /**
      *
-     * @param snatchUrlId
+     * @param map
      */
-    void deleteSnatchUrlById(String snatchUrlId);
+    int deleteSnatchUrlById(Map map);
 
     /**
      *
@@ -56,7 +56,21 @@ public interface SnatchurlMapper {
      *
      * @param map
      */
-    void updateSnatchUrl(Map map);
+    int updateSnatchUrl(Map map);
 
 
+    /**
+     * 根据公示时间获取ES搜索引擎所需招标数据
+     * @Param openDate
+     * @return
+     */
+    List<Map<String, Object>> listESZhaoBiaoDateByOpenDate(String openDate);
+
+
+    /**
+     * 据公示时间获取ES搜索引擎所需中标数据
+     * @Param openDate
+     * @return
+     */
+    List<Map<String, Object>> listESZhongBiaoDateByOpenDate(String openDate);
 }
