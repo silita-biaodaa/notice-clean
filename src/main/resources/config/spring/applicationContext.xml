@@ -80,9 +80,10 @@
 	</tx:advice>
 	<aop:config>
 		<aop:pointcut id="testPointcut"
-			expression="execution(* com.silita.biaodaa.service.*.*(..))" />
+			expression="execution(* com.silita.biaodaa.service..*.*(..))" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="testPointcut" />
 	</aop:config>
+
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
         <!-- 以字节为单位的最大上传文件的大小 the maximum file size in bytes -->
         <property name="maxUploadSize" value="6000000" />

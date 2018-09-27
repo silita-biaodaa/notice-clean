@@ -2,7 +2,7 @@ package com.silita.biaodaa.rules.ruleImpl.others;
 
 import com.silita.biaodaa.rules.Interface.RepeatRule;
 import com.silita.biaodaa.rules.ruleImpl.hunan.HunanBaseRule;
-import com.silita.biaodaa.service.INoticeCleanService;
+import com.silita.biaodaa.service.impl.NoticeCleanService;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OthersRepeatRule extends HunanBaseRule implements RepeatRule {
     @Autowired
-    INoticeCleanService noticeCleanService;
+    NoticeCleanService noticeCleanService;
 
     private static Logger logger = Logger.getLogger(OthersRepeatRule.class);
 

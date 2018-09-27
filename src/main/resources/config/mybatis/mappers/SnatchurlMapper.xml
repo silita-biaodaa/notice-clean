@@ -41,7 +41,9 @@
     </update>
 
     <delete id="deleteSnatchUrlById" parameterType="Map">
-        DELETE FROM ${snatchurlTable} WHERE id = #{id}
+        DELETE FROM ${snatchurlTable}
+        WHERE id = #{id}
+          AND redisId = #{redisId}
     </delete>
 
     <insert id="insertSnatchUrl" parameterType="Map">
@@ -76,6 +78,7 @@
         county = #{county}, rank = #{rank}, websitePlanId = #{websitePlanId}, uuid = #{uuid}, businessType = #{businessType},
         changeNum = changeNum + 1, otherType = #{otherType}, snatchDateTime = NOW(), redisId = #{redisId}, source = #{source}
         WHERE id = #{id}
+          AND redisId = #{hisRedisId}
     </update>
 
 

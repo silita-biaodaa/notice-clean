@@ -31,7 +31,7 @@ public interface SnatchurlMapper {
      *
      * @param map
      */
-    void deleteSnatchUrlById(Map map);
+    int deleteSnatchUrlById(Map map);
 
     /**
      *
@@ -56,7 +56,7 @@ public interface SnatchurlMapper {
      *
      * @param map
      */
-    void updateSnatchUrl(Map map);
+    int updateSnatchUrl(Map map);
 
 
     /**

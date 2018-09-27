@@ -1,6 +1,7 @@
 package com.silita.biaodaa.rules.ruleImpl.hunan;
 
 import com.silita.biaodaa.rules.Interface.RepeatFilter;
+import com.silita.biaodaa.rules.exception.MyRetryException;
 import com.silita.biaodaa.utils.MyStringUtils;
 import com.snatch.model.EsNotice;
 import org.apache.commons.collections.list.TreeList;
@@ -29,7 +30,7 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
         try {
             //1.获取新进公告的关键信息：时间数据序列，数据序列
             List<String> keysList = extractKeysList(esNotice.getPressContent());
-            if(keysList.isEmpty()){
+            if(keysList==null || keysList.isEmpty()){
                 filterState=IS_NEW;
             }
             //2.对比疑似队列,获取匹配队列
@@ -44,17 +45,22 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
                         continue;
                     }else{
                         if(compareKeysList(keysList,tmpKeysList)){
+                            logger.info("[new title:"+esNotice.getTitle()+"][keysList:"+keysList.toArray()+"][esNotice.getPressContent():"+esNotice.getPressContent()+"]\n" +
+                                    "[match title:"+compareNotice.getTitle()+"][tmpKeysList:"+tmpKeysList.toArray()+"][compareNotice.getPressContent():"+compareNotice.getPressContent()+"]");
                             matchNotices.add(compareNotice);
                         }
                     }
                 }
             }
+
             //3.对匹配队列，执行去重落地处理
             filterState = matchSetExecutor(esNotice,matchNotices);
+            return filterState;
+        }catch(MyRetryException rte){
+            throw rte;
         }catch (Exception e) {
             filterState= "error";
             logger.error(e,e);
-        }finally {
             return filterState;
         }
     }

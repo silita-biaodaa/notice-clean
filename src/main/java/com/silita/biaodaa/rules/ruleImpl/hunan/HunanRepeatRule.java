@@ -1,7 +1,8 @@
 package com.silita.biaodaa.rules.ruleImpl.hunan;
 
 import com.silita.biaodaa.rules.Interface.RepeatRule;
-import com.silita.biaodaa.service.INoticeCleanService;
+import com.silita.biaodaa.rules.exception.MyRetryException;
+import com.silita.biaodaa.service.impl.NoticeCleanService;
 import com.silita.biaodaa.utils.MyStringUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
@@ -24,7 +25,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
     FilterCompareKeys repeatFilter;
 
     @Autowired
-    INoticeCleanService noticeCleanService;
+    NoticeCleanService noticeCleanService;
 
     private String getKString(EsNotice n){
         return n.getTitle()+n.getUrl()+n.getType()+n.getPressContent()+n.getOpenDate()+n.getSource();
@@ -54,13 +55,46 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
         n.setContent(c);
     }
 
+    /**
+     * 根据匹配条件从db中获取匹配队列
+     * @param esNotice
+     * @param argMap
+     * @return
+     */
+    public  Set<EsNotice> matchNoticeSet(EsNotice esNotice,Map argMap) {
+        Set<EsNotice> matchSet = null;
+        List<EsNotice> matchTitleList=null;
+        List<EsNotice> matchNoticeList =null;
+        matchTitleList = noticeRuleService.matchEsNoticeList(argMap);
+        if (matchTitleList.size() >= 0) {
+            matchSet = new TreeSet<EsNotice>(matchTitleList);
+        } else {
+            matchSet = new TreeSet<EsNotice>();
+        }
+        //匹配公告集合：地区，类型，公示时间前后3天,相似度大于80%
+        Map nonTitleKey = new HashMap(argMap);
+        nonTitleKey.remove("titleKey");
+        logger.info("$$祛除标题，匹配队列条件[argMap:" + argMap + "]");
+        matchNoticeList = noticeRuleService.matchEsNoticeList(nonTitleKey);
+        for (EsNotice notice : matchNoticeList) {
+            if (similarDegreeWrapper(esNotice.getTitle(), notice.getTitle()) > 0.8) {
+                matchSet.add(notice);
+            }
+        }
+        nonTitleKey = null;
+        matchNoticeList = null;
+        matchTitleList = null;
+        if (matchSet.size() > 0) {
+            removeRepetitionSet(matchSet);
+        }
+        return matchSet;
+    }
+
     @Override
     public boolean executeRule(EsNotice esNotice) {
         logger.info("通用去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         boolean isNewNotice = false;
         String filterState="";
-        List<EsNotice> matchTitleList=null;
-        List<EsNotice> matchNoticeList =null;
         Set<EsNotice> matchSet = null;//根据标题等维度匹配，疑似公告总集合
         try {
             formatContent(esNotice);
@@ -68,8 +102,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
             String press = chineseCompressUtil.getPlainText(esNotice.getContent());
             esNotice.setPressContent(press);
 
+            //url重复判断（已存在url直接丢弃）
             int isExist = noticeCleanService.countSnastchUrlByUrl(esNotice);
-            //一、url重复判断（已存在url直接丢弃）
             if (isExist != 0) {
                 logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + "[title:"+title+"][type:"+esNotice.getType()+"] ####");
                 return false;
@@ -83,31 +117,38 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                 //匹配公告集合：标题片段，地区，类型，公示时间前后3天
                 Map argMap = buildTitleMatchParam(esNotice);
                 logger.info("2.1.标题匹配队列条件[argMap:"+argMap+"]");
-                matchTitleList = noticeRuleService.matchEsNoticeList(argMap);
-                if (matchTitleList.size()>= 0) {
-                    matchSet = new TreeSet<EsNotice>(matchTitleList);
-                }else{
-                    matchSet = new TreeSet<EsNotice>();
-                }
-                //匹配公告集合：地区，类型，公示时间前后3天,相似度大于80%
-                argMap.remove("titleKey");
-                logger.info("2.2.祛除标题，匹配队列条件[argMap:"+argMap+"]");
-                matchNoticeList = noticeRuleService.matchEsNoticeList(argMap);
-                for (EsNotice notice : matchNoticeList) {
-                    if (similarDegreeWrapper(title, notice.getTitle()) > 0.8) {
-                        matchSet.add(notice);
-                    }
-                }
 
-                if(matchSet.size()<=0){
-                    logger.info("2.3标题匹配队列为空。。条件[argMap:"+argMap+"]");
-                    filterState=IS_NEW;//异常情况，不做去重
-                }else {
-                    removeRepetitionSet(matchSet);
-                //3.执行去重逻辑，过滤内容等
-//                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
-                    filterState = repeatFilter.filterRule(esNotice,matchSet);//V1.6版本过滤规则
-                }
+                //多节点并发操作同一条historyNotice，使用乐观锁处理
+                int retryCount =3;//重试次数
+                boolean isRetry = false;
+                do{
+                    //重复匹配时，url重复判断（已存在url直接丢弃）
+                    if(isRetry) {
+                        int isExist2 = noticeCleanService.countSnastchUrlByUrl(esNotice);
+                        if (isExist2 != 0) {
+                            logger.info("#### 数据库中已存在相同url:" + esNotice.getUrl() + "[title:" + title + "][type:" + esNotice.getType() + "] ####");
+                            return false;
+                        }
+                    }
+
+                    try {
+                        matchSet = matchNoticeSet(esNotice, argMap);//匹配队列
+                        if (matchSet.size() <= 0) {
+                            logger.info("2.3标题匹配队列为空。。条件[argMap:" + argMap + "]");
+                            filterState = IS_NEW;//异常情况，不做去重
+                        } else {
+                            removeRepetitionSet(matchSet);
+                            //3.执行去重逻辑，过滤内容等
+    //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
+                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.6版本过滤规则
+                        }
+                        isRetry = false;
+                    } catch (MyRetryException rt) {
+                        retryCount--;
+                        isRetry = true;
+                        logger.warn("去重匹配数据脏读，准备重试...剩余重试次数："+retryCount+"||"+rt,rt);
+                    }
+                }while (isRetry && retryCount>0);
             }
 
             if(filterState.equals(IS_NEW)){//不重复，公告直接入库，需关联
@@ -128,8 +169,6 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
         }catch (Exception e){
             logger.error("###去重规则异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
-            matchNoticeList = null;
-            matchTitleList = null;
             matchSet=null;
             System.gc();
             logger.info("####通用去重规则结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
@@ -173,7 +212,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                             && esntPress.equals(esNotice.getPressContent())) {
                         //保留新进来的公告,替换历史公告
                         filterState=IS_UPDATED;
-                        replaceHistoryNotice(esnt, esNotice);
+                        noticeCleanService.replaceHistoryNotice(esnt, esNotice);
                     } else {
                         //公告入库
                         filterState=IS_NEW;

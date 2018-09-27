@@ -13,5 +13,5 @@ public interface SnatchurlcontentMapper {
      *
      * @param map
      */
-    void updateSnatchurlContent(Map map);
+    int updateSnatchurlContent(Map map);
 }
