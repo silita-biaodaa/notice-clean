@@ -623,7 +623,6 @@ public abstract class HunanBaseRule {
      */
     protected String matchSetExecutor(EsNotice esNotice,Set<EsNotice> matchSets) throws Exception{
         String filterState = "";
-        int type = esNotice.getType();
         if (matchSets.size() > 0) {
             boolean isRepeat = false;
             Iterator iter = matchSets.iterator();
@@ -637,18 +636,22 @@ public abstract class HunanBaseRule {
                     detailId = esnt.getDetail().getId();
                 }
 
-                //匹配集合进行相似度判断
-                String esntPress = esnt.getPressContent();
-                double computeNum = ComputeResemble.similarDegreeWrapper(esNotice.getPressContent(), esntPress);
-                if (type == 2) {//中标公告20%
-                    if (computeNum > 0.2) {
-                        isRepeat = true;
-                    }
-                } else {//非中标公告85%
-                    if (computeNum > 0.85) {
-                        isRepeat = true;
-                    }
-                }
+//                //匹配集合进行相似度判断
+//                String esntPress = esnt.getPressContent();
+//                double computeNum = ComputeResemble.similarDegreeWrapper(esNotice.getPressContent(), esntPress);
+//                if (type == 2) {//中标公告20%
+//                    if (computeNum > 0.2) {
+//                        isRepeat = true;
+//                    }
+//                } else {//非中标公告85%
+//                    if (computeNum > 0.85) {
+//                        isRepeat = true;
+//                    }
+//                }
+//                logger.debug("相识度比对结果[type"+type+"][computeNum:"+computeNum+"][isRepeat:"+isRepeat+"][detailId:"+detailId+"]");
+                isRepeat=true;
+                double computeNum=0.9;
+                logger.debug("相识度比对取消`。。。");
 
                 //符合条件，进行去重判断
                 if (isRepeat) {
@@ -676,6 +679,98 @@ public abstract class HunanBaseRule {
                     }else{
                         logger.error("网站等级判定异常[title:"+esNotice.getTitle()+"][新公告等级:+"+esNotice.getRank()+"]:[esnt.title:"+esnt.getTitle()+"][匹配公告等级:"+esnt.getRank()+"]");
                     }
+
+                    logger.debug("网站等级判断完毕[repeatExecute:"+repeatExecute+"][esNotice.getRank():"+esNotice.getRank()+"][esnt.getRank():"+esnt.getRank()+"]");
+
+
+                    if (repeatExecute.equals("newReplaceHis")) {
+                        if (!isReplaced) {
+                            isReplaced = true;
+                            noticeCleanService.replaceHistoryNotice(esNotice, esnt);//新公告替换历史公告，历史公告进入去重表
+                        } else {
+                            noticeCleanService.delHistoryNotice(esnt);//历史公告删除
+                        }
+                    } else if (repeatExecute.equals("delHis")) {
+                        noticeCleanService.delHistoryNotice(esnt);//历史公告删除
+                    } else if (repeatExecute.equals("intoRepetition")) {
+                        if (!intoRepeat) {
+                            noticeCleanService.insertSnatchurlRepetition(esNotice);
+                            intoRepeat = true;
+                        } else {
+                            continue;
+                        }
+                    }
+
+                }
+            }
+
+            if (isReplaced) {//公告已做替换处理，流程结束
+                filterState = IS_UPDATED;
+            } else if(intoRepeat) {
+                filterState = IS_REPEATED;
+            }else{
+                filterState = IS_NEW;
+            }
+        }else{
+            filterState = IS_NEW;
+        }
+        return filterState;
+    }
+
+    protected String matchAllExecutor(EsNotice esNotice,Set<EsNotice> matchSets) throws Exception{
+        String filterState = "";
+        int type = esNotice.getType();
+        if (matchSets.size() > 0) {
+            boolean isRepeat = false;
+            Iterator iter = matchSets.iterator();
+            boolean isReplaced = false;//是否(新公告)已替换历史公告
+            boolean intoRepeat = false;//新公告是否已进入去重表
+            while (iter.hasNext()) {
+                String repeatExecute = "";
+                EsNotice esnt = (EsNotice) iter.next();
+                Integer detailId = null;
+                if (esnt.getDetail() != null) {
+                    detailId = esnt.getDetail().getId();
+                }
+
+                //匹配集合进行相似度判断
+                String esntPress = esnt.getPressContent();
+                double computeNum = ComputeResemble.similarDegreeWrapper(esNotice.getPressContent(), esntPress);
+                if (computeNum > 0.98) {
+                    isRepeat = true;
+                }
+
+                logger.debug("相识度比对结果[type"+type+"][computeNum:"+computeNum+"][isRepeat:"+isRepeat+"][detailId:"+detailId+"]");
+
+                //符合条件，进行去重判断
+                if (isRepeat) {
+                    if (esNotice.getRank() != 0 && esnt.getRank() == 0) {//去重（历史）省公告
+                        //只替换有编辑内容的第一条编辑过的公告（已按ID排序）`
+                        if (detailId != null && detailId > 0 ) {
+                            repeatExecute = "newReplaceHis";
+                        } else {
+                            repeatExecute = "delHis";
+                        }
+                    }else if(esNotice.getRank() == esnt.getRank()){
+                        if(computeNum==1){
+                            repeatExecute = "intoRepetition";
+                        }else{
+                            repeatExecute= "newReplaceHis";
+                        }
+                    }else if(esNotice.getRank()==0 && esnt.getRank() != 0){
+                        repeatExecute = "intoRepetition";
+                    }else if(esNotice.getRank() != 0 && esnt.getRank() != 0){
+                        if(computeNum==1){
+                            repeatExecute = "intoRepetition";
+                        }else{
+                            repeatExecute= "newReplaceHis";
+                        }
+                    }else{
+                        logger.error("网站等级判定异常[title:"+esNotice.getTitle()+"][新公告等级:+"+esNotice.getRank()+"]:[esnt.title:"+esnt.getTitle()+"][匹配公告等级:"+esnt.getRank()+"]");
+                    }
+
+                    logger.debug("网站等级判断完毕[repeatExecute:"+repeatExecute+"][esNotice.getRank():"+esNotice.getRank()+"][esnt.getRank():"+esnt.getRank()+"]");
+
 
                     if (repeatExecute.equals("newReplaceHis")) {
                         if (!isReplaced) {
@@ -803,7 +898,10 @@ public abstract class HunanBaseRule {
         argMap.put("source", source);
         argMap.put("province", province);
         argMap.put("city", city);
-        argMap.put("type", convertType(esNotice));
+        logger.debug("title.indexOf(\"流标公告\"):"+title.indexOf("流标公告"));
+        if(title.indexOf("流标公告")==-1) {
+            argMap.put("type", convertType(esNotice));
+        }
         argMap.put("openDate", openDate);
         argMap.put("url", "%" + extractUrlHost(url) + "%");
         if (title.indexOf("标段") == -1) {

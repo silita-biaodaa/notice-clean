@@ -66,7 +66,8 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
         List<EsNotice> matchTitleList=null;
         List<EsNotice> matchNoticeList =null;
         matchTitleList = noticeRuleService.matchEsNoticeList(argMap);
-        if (matchTitleList.size() >= 0) {
+        logger.debug("matchTitleList:"+matchTitleList.size());
+        if (matchTitleList != null && matchTitleList.size() >0) {
             matchSet = new TreeSet<EsNotice>(matchTitleList);
         } else {
             matchSet = new TreeSet<EsNotice>();
@@ -74,8 +75,9 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
         //匹配公告集合：地区，类型，公示时间前后3天,相似度大于80%
         Map nonTitleKey = new HashMap(argMap);
         nonTitleKey.remove("titleKey");
-        logger.info("$$祛除标题，匹配队列条件[argMap:" + argMap + "]");
+        logger.info("$$祛除标题，匹配队列条件[argMap:" + nonTitleKey + "]");
         matchNoticeList = noticeRuleService.matchEsNoticeList(nonTitleKey);
+        logger.debug("matchNoticeList:"+matchNoticeList.size());
         for (EsNotice notice : matchNoticeList) {
             if (similarDegreeWrapper(esNotice.getTitle(), notice.getTitle()) > 0.8) {
                 matchSet.add(notice);
@@ -138,6 +140,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                             filterState = IS_NEW;//异常情况，不做去重
                         } else {
                             removeRepetitionSet(matchSet);
+                            logger.debug("匹配队列去重完毕。[matchSet:"+matchSet.size()+"]");
                             //3.执行去重逻辑，过滤内容等
     //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
                             filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.6版本过滤规则
