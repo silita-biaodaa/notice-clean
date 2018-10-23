@@ -21,4 +21,17 @@ public class RouteUtils {
             return tbName+"_"+source;
         }
     }
+
+    public static String routerDetailTabName(int type,String source){
+        String detailTabName = null;
+        if(type==2){
+            detailTabName="zhongbiao_detail";
+        }else{
+            detailTabName="zhaobiao_detail";
+        }
+        if(source != null && !source.equals(Constant.HUNAN_SOURCE)){
+            detailTabName+="_others";
+        }
+        return detailTabName;
+    }
 }

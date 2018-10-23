@@ -15,11 +15,12 @@ import static com.silita.biaodaa.utils.ComputeResemble.similarDegreeWrapper;
 import static com.silita.biaodaa.utils.RuleUtils.getNumStr;
 
 /**
+ * 通用去重规则
  * Created by dh on 2018/3/14.
  */
 @Component
-public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
-    private static Logger logger = Logger.getLogger(HunanRepeatRule.class);
+public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
+    private static Logger logger = Logger.getLogger(CommonRepeatRule.class);
 
     @Autowired
     FilterCompareKeys repeatFilter;
@@ -143,7 +144,7 @@ public class HunanRepeatRule extends HunanBaseRule implements RepeatRule {
                             logger.debug("匹配队列去重完毕。[matchSet:"+matchSet.size()+"]");
                             //3.执行去重逻辑，过滤内容等
     //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
-                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.6版本过滤规则
+                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.7版本过滤规则
                         }
                         isRetry = false;
                     } catch (MyRetryException rt) {

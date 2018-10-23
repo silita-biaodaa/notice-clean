@@ -26,7 +26,7 @@
   <name>notice-clean</name>
   <groupId>com.silita</groupId>
   <artifactId>notice-clean</artifactId>
-  <version>1.0.33.19</version>
+  <version>1.0.33.21</version>
 
   <properties>
     <spring.version>4.1.6.RELEASE</spring.version>

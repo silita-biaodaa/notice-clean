@@ -2,8 +2,6 @@ package com.silita.biaodaa.rules.ruleImpl.hunan;
 
 import com.silita.biaodaa.common.Constant;
 import com.silita.biaodaa.common.config.CustomizedPropertyConfigurer;
-import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
-import com.silita.biaodaa.common.elastic.indexes.IdxZhongbiaoSnatch;
 import com.silita.biaodaa.common.redis.RedisClear;
 import com.silita.biaodaa.dao_temp.SnatchNoticeHuNanDao;
 import com.silita.biaodaa.disruptor.DisruptorOperator;
@@ -13,6 +11,7 @@ import com.silita.biaodaa.service.impl.NoticeCleanService;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.ComputeResemble;
 import com.silita.biaodaa.utils.MyStringUtils;
+import com.silita.biaodaa.utils.RuleUtils;
 import com.snatch.model.AnalyzeDetail;
 import com.snatch.model.AnalyzeDetailZhongBiao;
 import com.snatch.model.EsNotice;
@@ -214,22 +213,6 @@ public abstract class HunanBaseRule {
         return str;
     }
 
-    /**
-     * 设置公告主类型type
-     * (历史逻辑，修改时需同时修改历史web工程的公告页面展示部分)
-     * @param esNotice
-     */
-    protected int convertType(EsNotice esNotice){
-        int type = esNotice.getType();
-        if (type == 2 || type == 5 || type == 51 || type == 52
-                ||esNotice.getTitle().endsWith("信息公示表")) {
-            type = 2;
-        } else {
-            type = 0;
-        }
-        return type;
-    }
-
 
     /**
      * 新进公告属性设置（入库时需要）
@@ -317,7 +300,8 @@ public abstract class HunanBaseRule {
         } else {
             otherType = type;
         }
-        notice.setType(convertType(notice));
+
+        notice.setType(RuleUtils.noticeTypeAdapter(notice));
         notice.setOtherType(String.valueOf(otherType));
 
         String areaRank = notice.getAreaRank();
@@ -380,8 +364,6 @@ public abstract class HunanBaseRule {
 
         //仅湖南数据更新维度，资质与es
         if (source.equals(Constant.HUNAN_SOURCE)) {
-            // 插入维度信息
-            noticeCleanService.insertDetail(notice);
             if (notice.getType() == 2) { //中标直接更新索引，不涉及资质
                 String insertEs = (String)CustomizedPropertyConfigurer.getContextProperty("es.data.send");
                 if(insertEs != null && insertEs.equals("true")){
@@ -397,7 +379,11 @@ public abstract class HunanBaseRule {
                 }
 
             } else {
-                //非2中标公告发起资质匹配任务
+                //湖南，非2中标公告发起资质匹配任务
+                disruptorOperator.publishQuaParse(notice);
+            }
+        }else{
+            if (notice.getType() != 2) { //全国公告，非2中标公告发起资质匹配任务
                 disruptorOperator.publishQuaParse(notice);
             }
         }
@@ -507,99 +493,6 @@ public abstract class HunanBaseRule {
 
 
     /**
-     * 两条公告去重
-     *
-     * @param notice
-     */
-    @Deprecated
-    public boolean handleRepeat(EsNotice notice, EsNotice historyNotice) {
-        if (notice.getRank() == 0 && historyNotice.getRank() != 0) {//新公告等级低
-            // 插入新进公告(省网)，isshow = 1
-            notice.setIsShow(1);
-            //插入公告基本信息
-            noticeCleanService.insertSnatchUrl(notice);
-            Integer id = noticeCleanService.getMaxSnatchUrlIdByUrl(notice);
-            //插入公告内容
-            noticeCleanService.insertSnatchContent(notice, id);
-            noticeCleanService.insertSnatchPress(notice, id);
-            logger.info("@@@@  新公告(省网)被去重 .. [redisId:" + notice.getRedisId() + "]title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-            return false;
-        }
-
-        if (notice.getRank() != 0 && historyNotice.getRank() == 0) {//新公告等级高于历史公告
-            // 插入新进公告，历史公告isshow = 1
-            notice.setEdit(historyNotice.getEdit());
-            handleNotRepeat(notice);
-            noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
-
-            if (historyNotice.getSource().equals(Constant.HUNAN_SOURCE)) {
-                // 删除es上的历史公告索引
-                if (historyNotice.getType() == 2) {
-                    // 删除中标公告索引
-                    snatchNoticeHuNanDao.deleteIndexById(IdxZhongbiaoSnatch.class, historyNotice.getUuid());
-                } else {
-                    // 删除招标公告索引
-                    snatchNoticeHuNanDao.deleteIndexById(IdxZhaobiaoSnatch.class, historyNotice.getUuid());
-                }
-            }
-
-            // 历史公告关联信息删除、编辑信息更改
-            noticeCleanService.delRelationInfoAndEditDetail(notice, historyNotice);
-            logger.info("@@@@  新公告入库，历史公告(省网)被去重 .. title：" + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-            return true;
-        }
-
-        // 新进公告与历史公告都不是省网,保留市级
-        if (notice.getRank() == 1 && historyNotice.getRank() == 2) {//新公告替换历史
-            //新公告update历史公告
-            redisClear.clearRepeatNotice(historyNotice.getUuid());
-
-            notice.setUuid(historyNotice.getUuid());
-            notice.setEdit(historyNotice.getEdit());
-
-            //更新基本表
-            noticeCleanService.updateSnatchUrl(notice, historyNotice);
-            //更新内容
-            noticeCleanService.updateSnatchurlContent(notice);
-            noticeCleanService.updateSnatchpress(notice);
-
-            noticeCleanService.insertSnatchurlRepetition(historyNotice);
-            //仅湖南数据处理es
-            if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
-                if (notice.getType() == 2) { //中标
-                    try {
-                        snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
-                    } catch (Exception e) {
-                        logger.error("@@@@ES中标去重更新失败" + e);
-                    }
-                } else {
-                    try {
-                        snatchNoticeHuNanDao.updateZhaobiaoEsNotice(notice);
-                    } catch (Exception e) {
-                        logger.error("@@@@ES招标去重更新失败" + e);
-                    }
-                }
-                // 历史公告关联信息删除、编辑信息更改
-                noticeCleanService.delRelationInfoAndEditDetail(notice, historyNotice);
-            }
-            logger.info("@@@@  新公告替换历史公告 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-            return true;
-        }
-
-        if (notice.getRank() == 2 && historyNotice.getRank() == 1) {
-            // 新公告进去重表
-            notice.setUuid(historyNotice.getUuid());
-            noticeCleanService.insertSnatchurlRepetition(historyNotice);
-            logger.info("@@@@  新公告被历史公告去重 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  @@@@");
-            return false;
-        }
-
-        handleNotRepeat(notice);
-        return true;
-    }
-
-
-    /**
      * 去除指定字符（只去除第一个）
      *
      * @param c
@@ -635,7 +528,6 @@ public abstract class HunanBaseRule {
                 if (esnt.getDetail() != null) {
                     detailId = esnt.getDetail().getId();
                 }
-
 //                //匹配集合进行相似度判断
 //                String esntPress = esnt.getPressContent();
 //                double computeNum = ComputeResemble.similarDegreeWrapper(esNotice.getPressContent(), esntPress);
@@ -900,7 +792,7 @@ public abstract class HunanBaseRule {
         argMap.put("city", city);
         logger.debug("title.indexOf(\"流标公告\"):"+title.indexOf("流标公告"));
         if(title.indexOf("流标公告")==-1) {
-            argMap.put("type", convertType(esNotice));
+            argMap.put("type", noticeTypeAdapter(esNotice));
         }
         argMap.put("openDate", openDate);
         argMap.put("url", "%" + extractUrlHost(url) + "%");

@@ -42,6 +42,16 @@ public class EsNotice implements Serializable,Comparable{
 
 	private Integer edit;
 
+	private String detailTabName;
+
+	public String getDetailTabName() {
+		return detailTabName;
+	}
+
+	public void setDetailTabName(String detailTabName) {
+		this.detailTabName = detailTabName;
+	}
+
 	public String getPressContent() {
 		return pressContent;
 	}

@@ -468,13 +468,8 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         } else {
             otherType = type;
         }
-        if (type == 2 || type == 5 || type == 51 || type == 52) {
-            type = 2;
-        } else {
-            type = 0;
-        }
         notice.setOtherType(String.valueOf(otherType));
-        notice.setType(type);
+        notice.setType(RuleUtils.noticeTypeAdapter(notice));
 
         String areaRank = notice.getAreaRank();
         if (StringUtils.isBlank(areaRank) || areaRank.equals("___")) {
@@ -758,23 +753,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
 
     @Override
     public void handleNotRepeatZhaobiao(EsNotice notice) {
-        /*if (notice.getTitle().indexOf("采购") != -1 || notice.getTitle().indexOf("谈判") != -1
-                || notice.getTitle().indexOf("磋商") != -1) { //是采购
-            //！！！注意  这里的id是在原snatchurl表最大id+1 删除snatchutl表数据 采购公告资质可能出错（snatch_url_cert.contId对不上）！！！
-            int id = this.queryForInt("select max(id) from mishu.snatchurl", new Object[]{}) + 1;
-            String uuid = String.valueOf(id);
-            //招标公告进入资质解析
-            if (notice.getType() != 2) {
-                List<Map<String, Object>> zh = service.queryzh();//所有资质
-                List list = snatchDao.insertUrlCertCg(Integer.parseInt(uuid), zh, notice);    //插入资质(snatch_url_cert)
-                if (list.size() != 0) {  //有资质的采购公告才入库
-                    this.insertNotice(notice);//插入公告内容以及url表
-                    notice.setUuid(uuid);
-                    insertEsNoticeElasticSearch(notice);//插入到搜索引擎
-                }
-            }
-        }
-        else {    //不变*/
         Map<String, String> map = this.insertNotice(notice);//插入公告内容以及url表
         String uuid = map.get("id");
         String otherType = map.get("otherType");
@@ -1814,15 +1792,18 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
             zhongbiaoDoc.setProjType(notice.getDetailZhongBiao().getProjType());
             zhongbiaoDoc.setPbMode(notice.getDetailZhongBiao().getPbMode());
             String projSum = notice.getDetailZhongBiao().getProjSum();
-            if (projSum != null && !projSum.trim().equals("")) {
+            if (MyStringUtils.isNotNull(projSum)) {
                 zhongbiaoDoc.setProjSum(Double.parseDouble(projSum));
             }
-
-            if (notice.getEdit() != null)
+            String oneOffer = notice.getDetailZhongBiao().getOneOffer();
+            if (MyStringUtils.isNotNull(oneOffer)) {
+                zhongbiaoDoc.setOneOffer(Double.parseDouble(oneOffer));
+            }
+            if (notice.getEdit() != null) {
                 zhongbiaoDoc.setEdit(notice.getEdit());
-            else
+            }else {
                 zhongbiaoDoc.setEdit(0);
-
+            }
 //            zhongbiaoDoc.setContent(notice.getContent());
             String gsDate = notice.getDetailZhongBiao().getGsDate();
             if (gsDate != null && !gsDate.trim().equals("")) {
@@ -1834,10 +1815,8 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
             zhongbiaoDoc.setProvince(notice.getProvince());  //省
             zhongbiaoDoc.setCity(notice.getCity());  //市
             zhongbiaoDoc.setCounty(notice.getCounty());  //地区
-
             zhongbiaoDoc.setType(notice.getType()); //类型:0招标信息，招标变更1，中标结果2
             zhongbiaoDoc.setTableName(notice.getTableName());    //表名
-
             elaticsearchUtils.saveOrUpdate(zhongbiaoDoc);
         }
     }
