@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.silita.biaodaa.dao.CleanMapper">
+    <insert id="insertAnalysisDetail"  parameterType="com.snatch.model.EsNotice">
+       INSERT INTO ${detailTabName}
+       (snatchUrlId,
+       projName,
+       source,
+       gsDate,
+        block,
+        projDq,
+        projXs,
+        <choose>
+                <!--中标-->
+                <when test="type==2">
+                    oneName,
+                    oneOffer,
+                    twoName,
+                    twoOffer,
+                    threeName,
+                    threeOffer
+                </when>
+                <!--招标 -->
+                <otherwise>
+                    pbMode
+                </otherwise>
+        </choose>
+        )
+        VALUES
+        (#{uuid},
+        #{title},
+        #{source},
+        #{openDate},
+        '1',
+        <choose>
+            <!--中标字段-->
+            <when test="type==2">
+                #{detailZhongBiao.city},
+                #{detailZhongBiao.county},
+                #{detailZhongBiao.oneName},
+                #{detailZhongBiao.oneOffer},
+                #{detailZhongBiao.twoName},
+                #{detailZhongBiao.twoOffer},
+                #{detailZhongBiao.threeName},
+                #{detailZhongBiao.threeOffer}
+            </when>
+            <!--招标字段 -->
+            <otherwise>
+                #{detail.city},
+                #{detail.county},
+                #{detail.pbMode}
+            </otherwise>
+        </choose>
+        )
+    </insert>
+
+    <update id="updateNoticeShowStatus" parameterType="com.snatch.model.EsNotice">
+        UPDATE ${tableName}
+        SET edit=1
+        WHERE id=#{uuid}
+    </update>
+
+
+</mapper>

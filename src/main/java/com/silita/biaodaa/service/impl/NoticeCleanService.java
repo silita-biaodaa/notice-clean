@@ -11,8 +11,6 @@ import com.silita.biaodaa.model.SnatchurlRepetition;
 import com.silita.biaodaa.rules.exception.MyRetryException;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.RouteUtils;
-import com.snatch.model.AnalyzeDetail;
-import com.snatch.model.AnalyzeDetailZhongBiao;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,33 +254,6 @@ public class NoticeCleanService {
         pressParams.put("snatchUrlId", snatchUrlId);
         //添加整理后的公告内容
         snatchpressMapper.insertSnatchPress(pressParams);
-    }
-
-
-
-    /**
-     * 添加维度信息
-     *
-     * @param esNotice
-     */
-    public void insertDetail(EsNotice esNotice) {
-        if (esNotice.getType() == 2) {
-            //中标
-            AnalyzeDetailZhongBiao zhongBiaoAnalyzeDetail = esNotice.getDetailZhongBiao();
-            zhongBiaoAnalyzeDetail.setRedisId(Integer.parseInt(esNotice.getUuid()));
-            Integer count = zhongbiaoAnalyzeDetailMapper.getZhongBiaoAnalyzeDetailByUrl(zhongBiaoAnalyzeDetail.getNoticeUrl());
-            if (count == 0) {
-                zhongbiaoAnalyzeDetailMapper.insertZhongBiaoAnalyzeDetail(zhongBiaoAnalyzeDetail);
-            }
-        } else {
-            //招标
-            AnalyzeDetail zhaoBiaoAnalyzeDetail = esNotice.getDetail();
-            zhaoBiaoAnalyzeDetail.setRedisId(Integer.parseInt(esNotice.getUuid()));
-            Integer count = zhaobiaoAnalyzeDetailMapper.getZhaobiaoAnalyzeDetailByUrl(zhaoBiaoAnalyzeDetail.getNoticeUrl());
-            if (count == 0) {
-                zhaobiaoAnalyzeDetailMapper.insertZhaobiaoAnalyzeDetail(esNotice.getDetail());
-            }
-        }
     }
 
     public void updateSnatchUrlCert(Integer id, Integer historyId) {

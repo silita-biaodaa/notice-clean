@@ -17,8 +17,8 @@
       WHERE snatchUrlId = #{snatchUrlId}
   </update>
 
-  <select id="getSnatchpress" parameterType="Integer" resultType="com.silita.biaodaa.model.Snatchpress">
-    SELECT b.press FROM mishu.snatchpress b where b.snatchUrlId = #{id} limit 1
+  <select id="getSnatchpress" parameterType="Map" resultType="com.silita.biaodaa.model.Snatchpress">
+    SELECT b.press FROM ${pressTable} b where b.snatchUrlId = #{id} limit 1
   </select>
 
   <select id="queryzh" resultType="Map">
@@ -38,9 +38,11 @@
   </select>
 
   <insert id="insertSnatchUrlCert" parameterType="Map">
-    INSERT INTO mishu.snatch_url_cert (contId,certificate,certificateUUid,type,licence)
+    INSERT INTO ${certTable} (contId,certificate,certificateUUid,type,licence,
+    source)
     VALUES
-    (#{contId},#{certificate},#{certificateUUid},#{type},#{licence})
+    (#{contId},#{certificate},#{certificateUUid},#{type},#{licence},
+    #{source})
   </insert>
 
   <select id="getBuildZhList" parameterType="Map" resultType="Map">

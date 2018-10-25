@@ -23,18 +23,20 @@ public class NoticeRuleService {
     }
 
     public List<EsNotice> matchEsNoticeList(Map params){
-        int type = (int)params.get("type");
         String source= (String)params.get("source");
         params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", source));
         params.put("snatchurlContentTable", RouteUtils.routeTableName("mishu.snatchurlcontent", source));
         params.put("snatchurlPressTable", RouteUtils.routeTableName("mishu.snatchpress", source));
-        String detailTable = null;
-        if(type==2) {
-            detailTable = "mishu.zhongbiao_detail";
-        }else{
-            detailTable ="mishu.zhaobiao_detail";
+        if(params.get("type")!=null) {
+            String detailTable = null;
+            int type = (int) params.get("type");
+            if (type == 2) {
+                detailTable = "mishu.zhongbiao_detail";
+            } else {
+                detailTable = "mishu.zhaobiao_detail";
+            }
+            params.put("detailTable", detailTable);
         }
-        params.put("detailTable", detailTable);
         return noticeRuleMapper.matchEsNoticeList(params);
     }
 }
