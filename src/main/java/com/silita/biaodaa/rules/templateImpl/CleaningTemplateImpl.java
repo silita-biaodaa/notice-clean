@@ -3,6 +3,7 @@ package com.silita.biaodaa.rules.templateImpl;
 import com.silita.biaodaa.rules.Interface.CleaningTemplate;
 import com.silita.biaodaa.rules.Interface.RelationRule;
 import com.silita.biaodaa.rules.Interface.RepeatRule;
+import com.silita.biaodaa.service.CleanService;
 import com.silita.biaodaa.service.MessagePushService;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
@@ -28,6 +29,9 @@ public class CleaningTemplateImpl implements CleaningTemplate {
     @Value( "${relation_flag}" )
     private boolean relationFlag;
 
+    @Autowired
+    private CleanService cleanService;
+
 
     public CleaningTemplateImpl(RepeatRule repeatRule, RelationRule relationRule){
         this.repeatRule = repeatRule;
@@ -39,16 +43,23 @@ public class CleaningTemplateImpl implements CleaningTemplate {
         esNotice.setTableName("mishu.snatchurl");
         long repStartTime = System.currentTimeMillis();
         //1.公告去重
+        logger.info("#####去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         boolean repeatStatus = repeatRule.executeRule(esNotice);
-        logger.info("##### 入库消耗时间：" + (System.currentTimeMillis() - repStartTime) +" ms #####");
+        logger.info("#####去重执行完毕，[title:"+esNotice.getTitle()+"][redisId:"+esNotice.getRedisId()+"][repeatStatus+"+repeatStatus+"][url:"+esNotice.getUrl()+"][relationFlag:"+relationFlag+"]" +
+                "\n去重消耗时间：" + (System.currentTimeMillis() - repStartTime) +" ms #####");
+        //2.全国公告，解析内容直接插入到编辑表
+        if(repeatStatus){
+            logger.info("准备插入编辑信息storeAnalysisDetail:[id:"+esNotice.getUuid()+"][title:"+esNotice.getTitle()+"][TableName:"+esNotice.getTableName()+"]");
+            cleanService.storeAnalysisDetail(esNotice);
+        }
+
         // 无重复数据调用关联方法
-        logger.info("[redisId:"+esNotice.getRedisId()+"][url:"+esNotice.getUrl()+"][repeatStatus:"+repeatStatus+"][relationFlag:"+relationFlag+"]");
         if(repeatStatus && relationFlag){
             String title = esNotice.getTitle();
             double startTotal = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
             logger.info(esNotice.getRedisId()+"####title:"+title+",开始执行关联。。。当前jvm内存用量："+startTotal+"MB");
             long startTime = System.currentTimeMillis();
-            //2.公告关联
+            //3.公告关联
             Map<String,Object> relationMap = relationRule.executeRule(esNotice);
             double endTotal = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
             logger.info(esNotice.getRedisId()+"##### title:"+title+",关联结束，消耗时间："+( System.currentTimeMillis()-startTime)+"ms #####" +
@@ -63,6 +74,8 @@ public class CleaningTemplateImpl implements CleaningTemplate {
 //                }
 //            }
         }
+
+
         esNotice =null;
     }
 

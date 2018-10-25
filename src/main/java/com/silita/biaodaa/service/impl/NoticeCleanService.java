@@ -11,8 +11,6 @@ import com.silita.biaodaa.model.SnatchurlRepetition;
 import com.silita.biaodaa.rules.exception.MyRetryException;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
 import com.silita.biaodaa.utils.RouteUtils;
-import com.snatch.model.AnalyzeDetail;
-import com.snatch.model.AnalyzeDetailZhongBiao;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -175,35 +173,36 @@ public class NoticeCleanService {
     }
 
     /**
-     * 删除关联并更新编辑明细
+     * 删除关联
      *
      * @param esNotice
      * @param historyNotice
      */
     public int deleteRepetitionAndUpdateDetail(EsNotice esNotice, EsNotice historyNotice) {
-        snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(historyNotice.getUuid()));
-        Map params = new HashMap<String, Object>();
-        params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
-        params.put("url", esNotice.getUrl());
-        int noticeId = snatchurlMapper.getSnatchurlIdByUrl(params);
-        // 编辑信息修改// 已编辑
-        if (historyNotice.getEdit() == 1) {
-            Map detailParams;
-            if (historyNotice.getType() == 2) {
-                // 中标
-                detailParams = new HashMap<String, Object>();
-                detailParams.put("snatchUrlId", noticeId);
-                detailParams.put("historyId", Integer.valueOf(historyNotice.getUuid()));
-                zhongbiaoDetailMapper.updateZhongbiaoDetail(detailParams);
-            } else {
-                //招标
-                detailParams = new HashMap<String, Object>();
-                detailParams.put("snatchUrlId", noticeId);
-                detailParams.put("historyId", Integer.valueOf(historyNotice.getUuid()));
-                zhaobiaoDetailMapper.updateZhaobiaoDetail(detailParams);
-            }
-        }
-        return noticeId;
+        int delCount =  snatchurlRepetitionMapper.deleteSnatchrelation(Long.valueOf(historyNotice.getUuid()));
+//        Map params = new HashMap<String, Object>();
+//        params.put("snatchurlTable", RouteUtils.routeTableName("mishu.snatchurl", esNotice));
+//        params.put("url", esNotice.getUrl());
+//        int noticeId = snatchurlMapper.getSnatchurlIdByUrl(params);
+        //更新编辑信息逻辑废除
+//        // 编辑信息修改// 已编辑
+//        if (historyNotice.getEdit() == 1) {
+//            Map detailParams;
+//            if (historyNotice.getType() == 2) {
+//                // 中标
+//                detailParams = new HashMap<String, Object>();
+//                detailParams.put("snatchUrlId", noticeId);
+//                detailParams.put("historyId", Integer.valueOf(historyNotice.getUuid()));
+//                zhongbiaoDetailMapper.updateZhongbiaoDetail(detailParams);
+//            } else {
+//                //招标
+//                detailParams = new HashMap<String, Object>();
+//                detailParams.put("snatchUrlId", noticeId);
+//                detailParams.put("historyId", Integer.valueOf(historyNotice.getUuid()));
+//                zhaobiaoDetailMapper.updateZhaobiaoDetail(detailParams);
+//            }
+//        }
+        return delCount;
     }
 
     public void insertSnatchUrl(EsNotice esNotice) {
@@ -256,33 +255,6 @@ public class NoticeCleanService {
         pressParams.put("snatchUrlId", snatchUrlId);
         //添加整理后的公告内容
         snatchpressMapper.insertSnatchPress(pressParams);
-    }
-
-
-
-    /**
-     * 添加维度信息
-     *
-     * @param esNotice
-     */
-    public void insertDetail(EsNotice esNotice) {
-        if (esNotice.getType() == 2) {
-            //中标
-            AnalyzeDetailZhongBiao zhongBiaoAnalyzeDetail = esNotice.getDetailZhongBiao();
-            zhongBiaoAnalyzeDetail.setRedisId(Integer.parseInt(esNotice.getUuid()));
-            Integer count = zhongbiaoAnalyzeDetailMapper.getZhongBiaoAnalyzeDetailByUrl(zhongBiaoAnalyzeDetail.getNoticeUrl());
-            if (count == 0) {
-                zhongbiaoAnalyzeDetailMapper.insertZhongBiaoAnalyzeDetail(zhongBiaoAnalyzeDetail);
-            }
-        } else {
-            //招标
-            AnalyzeDetail zhaoBiaoAnalyzeDetail = esNotice.getDetail();
-            zhaoBiaoAnalyzeDetail.setRedisId(Integer.parseInt(esNotice.getUuid()));
-            Integer count = zhaobiaoAnalyzeDetailMapper.getZhaobiaoAnalyzeDetailByUrl(zhaoBiaoAnalyzeDetail.getNoticeUrl());
-            if (count == 0) {
-                zhaobiaoAnalyzeDetailMapper.insertZhaobiaoAnalyzeDetail(esNotice.getDetail());
-            }
-        }
     }
 
     public void updateSnatchUrlCert(Integer id, Integer historyId) {
@@ -347,9 +319,8 @@ public class NoticeCleanService {
         if(baseMatch !=1){
             throw new MyRetryException("更新基本表失败[hisRedisid:"+historyNotice.getRedisId()+"][his.title:"+historyNotice.getTitle()+"][his.source:"+historyNotice.getSource()+"]");
         }
-        //更新内容
+        //更新内容，压缩内容
         int contentMatch = updateSnatchurlContent(notice);
-        //更新压缩内容
         int pressMatch = updateSnatchpress(notice);
         logger.info("新进公告替换历史公告.[hisRedisid:"+historyNotice.getRedisId()+"][contentMatch:"+contentMatch+"][pressMatch:"+pressMatch+"]");
 
@@ -358,10 +329,12 @@ public class NoticeCleanService {
             insertSnatchurlRepetition(historyNotice);
             //仅湖南数据处理es,清洗缓存等
             if (notice.getSource().equals(Constant.HUNAN_SOURCE)) {
-                // 历史公告关联信息删除、编辑信息更改
-                delRelationInfoAndEditDetail(notice, historyNotice);
+                // 历史公告关联信息删除，更新资质
+                deleteRepetitionAndUpdateDetail(notice, historyNotice);
                 //清理页面缓存
+                redisClear.clearGonggaoRelation(historyNotice.getUuid());
                 redisClear.clearRepeatNotice(historyNotice.getUuid());
+
                 if (notice.getType() == 2) { //中标
                     try {
                         snatchNoticeHuNanDao.insertZhongbiaoEsNotice(notice);
@@ -379,7 +352,7 @@ public class NoticeCleanService {
         }catch(Exception e ){
             logger.error("[reidsId:"+notice.getRedisId()+"][title:"+notice.getTitle()+"][url:"+notice.getUrl()+"]"+e,e);
         }
-        logger.info("###新公告替换历史公告 .. title: " + notice.getTitle() + "  历史公告 : " + historyNotice.getTitle() + "  ###");
+        logger.info("###新公告替换历史公告 ..[reidsId:"+notice.getRedisId()+"][title:"+notice.getTitle()+"]  历史公告 : [his.reidsId:"+historyNotice.getRedisId()+"][his.title:"+historyNotice.getTitle()+"] ");
         return true;
     }
 
@@ -390,10 +363,7 @@ public class NoticeCleanService {
      * @param historyNotice
      */
     public void delRelationInfoAndEditDetail(EsNotice notice, EsNotice historyNotice) {
-        redisClear.clearGonggaoRelation(historyNotice.getUuid());   //清理公告关联信息缓存
-        int noticeId = deleteRepetitionAndUpdateDetail(notice, historyNotice);
-        // 资质信息修改
-        updateSnatchUrlCert(noticeId, Integer.valueOf(historyNotice.getUuid()));
+
     }
 
     /**
@@ -402,10 +372,6 @@ public class NoticeCleanService {
      * @return
      */
     public boolean delHistoryNotice( EsNotice historyNotice)throws MyRetryException{
-//        // 插入新进公告，历史公告isshow = 1
-//        notice.setEdit(historyNotice.getEdit());
-//        handleNotRepeat(notice);
-//        noticeCleanService.updateIsShowById(historyNotice.getUuid(), 1, notice.getSource());
         try {
             int match = deleteSnatchUrl(historyNotice.getUuid(), historyNotice.getSource(),historyNotice.getRedisId());
             if(match==1) {

@@ -1,10 +1,10 @@
 package com.silita.biaodaa.service;
 
+import com.silita.biaodaa.common.Constant;
 import com.silita.biaodaa.common.config.CustomizedPropertyConfigurer;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
 import com.silita.biaodaa.common.elastic.model.ElasticEntity;
 import com.silita.biaodaa.dao.SnatchpressMapper;
-import com.silita.biaodaa.model.Snatchpress;
 import com.silita.biaodaa.utils.CommonUtil;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
@@ -42,9 +42,9 @@ public class QuaParseService {
      */
     public List insertUrlCert(int id , EsNotice notice) {
         //公告信息
-        Snatchpress snatchpress = snatchpressMapper.getSnatchpress(id);
-        SoftReference<String> contentRef = new SoftReference<String>(snatchpress.getPress());
+        SoftReference<String> contentRef = new SoftReference<String>(notice.getPressContent());
         List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();
+        String source = notice.getSource();
 
         List<Map<String, Object>> list = ZhService.queryzh();
         for (int i = 0; i < list.size(); i++) {
@@ -84,48 +84,51 @@ public class QuaParseService {
         }
         list=null;
 
-        if (zh.size() == 0) {   //匹配不到的别名存入Unanalysis_aptitude表
-            String zzRank = "";
-            String rangeHtml = "";
-            List<Map<String, Object>> arList = snatchpressMapper.queryAnalyzeRangeByField("zzRank");
-            for (int k = 0; k < arList.size(); k++) {
-                String start = arList.get(k).get("rangeStart").toString();
-                String end = arList.get(k).get("rangeEnd").toString();
-                int indexStart = 0;
-                int indexEnd = 0;
-                if (!"".equals(start)) {
-                    indexStart = contentRef.get().indexOf(start);//范围开始位置
-                }
-                if (!"".equals(end)) {
-                    indexEnd = contentRef.get().lastIndexOf(end);
-                }
-                if (indexStart != -1 && indexEnd != -1) {
-                    if (indexEnd > indexStart) {
-                        rangeHtml = contentRef.get().substring(indexStart, indexEnd);
-                        rangeHtml = rangeHtml.replaceAll("\\s*", "");    //去空格
-                        if (rangeHtml.length() > 30) {
-                            rangeHtml = rangeHtml.substring(0, 30);
-                        }
-                        zzRank = rangeHtml.replace("颁发的", "").replace("核发的", "").replace("具备", "").replace("具有", "");
-                        if (zzRank.indexOf("级") == -1) {
-                            zzRank = "";
-                        }
-                        if (zzRank.length() > 0) {
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!"".equals(zzRank)) {
-                String message = "";
-                logger.info("#####为解析到" + zzRank + "#####");
-                Map<String,Object> param = new HashMap<>();
-                param.put("snatchUrlId",id);
-                param.put("aptitude",zzRank);
-                param.put("snatchContent",message);
-                snatchpressMapper.insertUnanalysis_aptitude(param);
-            }
-        }
+        //查询数据库中的资质规则（旧）进行解析
+//        if (zh.size() == 0) {
+//            String zzRank = "";
+//            String rangeHtml = "";
+//            List<Map<String, Object>> arList = snatchpressMapper.queryAnalyzeRangeByField("zzRank");
+//            for (int k = 0; k < arList.size(); k++) {
+//                String start = arList.get(k).get("rangeStart").toString();
+//                String end = arList.get(k).get("rangeEnd").toString();
+//                int indexStart = 0;
+//                int indexEnd = 0;
+//                if (!"".equals(start)) {
+//                    indexStart = contentRef.get().indexOf(start);//范围开始位置
+//                }
+//                if (!"".equals(end)) {
+//                    indexEnd = contentRef.get().lastIndexOf(end);
+//                }
+//                if (indexStart != -1 && indexEnd != -1) {
+//                    if (indexEnd > indexStart) {
+//                        rangeHtml = contentRef.get().substring(indexStart, indexEnd);
+//                        rangeHtml = rangeHtml.replaceAll("\\s*", "");    //去空格
+//                        if (rangeHtml.length() > 30) {
+//                            rangeHtml = rangeHtml.substring(0, 30);
+//                        }
+//                        zzRank = rangeHtml.replace("颁发的", "").replace("核发的", "").replace("具备", "").replace("具有", "");
+//                        if (zzRank.indexOf("级") == -1) {
+//                            zzRank = "";
+//                        }
+//                        if (zzRank.length() > 0) {
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//            if (!"".equals(zzRank)) {
+//                String message = "";
+//                logger.info("#####为解析到" + zzRank + "#####");
+//                Map<String,Object> param = new HashMap<>();
+//                param.put("snatchUrlId",id);
+//                param.put("aptitude",zzRank);
+//                param.put("snatchContent",message);
+//                snatchpressMapper.insertUnanalysis_aptitude(param);
+//            }
+//        }
+
+
         for (int k = 0; k < zh.size(); k++) {
             Map<String, Object> mapname = snatchpressMapper.getAptitudeDictionary(zh.get(k).get("uuid").toString());
             if(mapname !=null){
@@ -138,24 +141,37 @@ public class QuaParseService {
                     param.put("certificateUUid",uuid.replaceAll("'", ""));
                     param.put("type",zh.get(k).get("type"));
                     param.put("licence",zh.get(k).get("licence"));
+                    param.put("source",source);
+                    if (source==null || source.equals(Constant.HUNAN_SOURCE)) {
+                        param.put("certTable","snatch_url_cert");
+                    }else{
+                        param.put("certTable","snatch_url_cert_others");
+                    }
                     snatchpressMapper.insertSnatchUrlCert(param);
                 }
             }
         }
 
-        insertUrlBuild(id,contentRef);
+        //公告建造师匹配暂停
+//        insertUrlBuild(id,contentRef);
 
-        String insertEs = (String) CustomizedPropertyConfigurer.getContextProperty("es.data.send");
-        if(insertEs != null && insertEs.equals("true")){
-            try{
-                insertZhaobiaoEsNotice(notice);
-                logger.info("招标公告插入es完成");
-            } catch (Exception e) {
-                logger.error("招标公告插入es异常" + e,e);
+        //仅湖南公告更新es
+        if (source==null || source.equals(Constant.HUNAN_SOURCE)) {
+            String insertEs = (String) CustomizedPropertyConfigurer.getContextProperty("es.data.send");
+            if (insertEs != null && insertEs.equals("true")) {
+                try {
+                    insertZhaobiaoEsNotice(notice);
+                    logger.info("湖南招标公告插入es完成");
+                } catch (Exception e) {
+                    logger.error("湖南招标公告插入es异常" + e, e);
+                }
+            } else {
+                logger.info("湖南招标公告取消插入es");
             }
         }else{
-            logger.info("招标公告取消插入es");
+            //全国公告暂无es操作
         }
+
         return zh;
     }
 

@@ -19,7 +19,7 @@ public interface SnatchpressMapper extends MyMapper<Snatchpress> {
      */
     int updateSnatchpress(Map map);
 
-    Snatchpress getSnatchpress(Integer id);
+    Snatchpress getSnatchpress(Map map);
 
     List<Map<String, Object>> queryzh();
 

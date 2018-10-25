@@ -15,12 +15,17 @@
         ifnull(redisId,0) redisId,
         ifnull(websitePlanId,0) websitePlanId, ifnull(tableName,'') tableName, b.content, a.otherType, a.uuid
         snatchNumber,
-        a.biddingType, a.businessType, a.edit edit, a.source,det.id `detail.id`,
-        c.press pressContent
+        a.biddingType, a.businessType, a.edit edit, a.source
+        ,c.press pressContent
+        <if test="detailTable != null and detailTable !=''">
+        ,det.id `detail.id`
+        </if>
         FROM ${snatchurlTable} AS a
         LEFT JOIN ${snatchurlContentTable} AS b ON a.id = b.snatchUrlId
         LEFT JOIN ${snatchurlPressTable} AS c ON a.id = c.snatchUrlId
-        LEFT JOIN ${detailTable} AS det ON det.snatchUrlId=a.id
+        <if test="detailTable != null and detailTable !=''">
+          LEFT JOIN ${detailTable} AS det ON det.snatchUrlId=a.id
+        </if>
         <where>
             a.isShow = 0 AND a.url NOT LIKE #{url}
             <if test="titleKey != null and titleKey != ''">
@@ -36,9 +41,15 @@
                 AND a.title NOT LIKE #{notLike}
             </if>
             AND a.openDate BETWEEN DATE_SUB(#{openDate},INTERVAL 3 DAY) AND DATE_SUB(#{openDate},INTERVAL -3 DAY)
+            <if test="type != null and type !=''">
             AND a.type = #{type}
+            </if>
         </where>
-        ORDER BY det.id DESC,a.id DESC
+        ORDER BY
+        <if test="detailTable != null and detailTable !=''">
+        det.id DESC,
+        </if>
+        a.id DESC
         limit 0,1000
     </select>
 
