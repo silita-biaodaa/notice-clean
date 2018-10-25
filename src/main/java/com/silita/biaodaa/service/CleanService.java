@@ -34,7 +34,6 @@ public class CleanService {
 
         //更新公告状态为可见
         esNotice.setTableName(RouteUtils.routeTableName("mishu.snatchurl",esNotice));
-        logger.info(esNotice.getTableName()+"#########"+esNotice.getUuid());
         cleanMapper.updateNoticeShowStatus(esNotice);
     }
 

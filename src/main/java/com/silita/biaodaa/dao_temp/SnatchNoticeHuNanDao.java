@@ -16,10 +16,6 @@ import java.util.Map;
 @Deprecated
 public interface SnatchNoticeHuNanDao {
 
-	boolean insertEsNotice(EsNotice notice);
-
-	void insertEsNoticeElasticSearch(EsNotice notice);
-
 	int insertZhaobiaoAnalyzeDetail(AnalyzeDetail ad);
 
 	int insertZhongBiaoAnalyzeDetail(AnalyzeDetailZhongBiao ad);
@@ -27,21 +23,15 @@ public interface SnatchNoticeHuNanDao {
 	int insertOrUpdateAnalyzeDetail(AnalyzeDetail ad);
 
 	int insertOrUpdateAnalyzeDetailZhongBiao(AnalyzeDetailZhongBiao ad);
+//
+//	//查询2个公告id所关联的所有公告id（不包含自己）
+//	List<String> querysDifferNextId(String zhaobId, String thisId);
 
-	boolean insertEsNoticeZhongBiao(EsNotice notice);	//中标
-
-	List<Map<String,Object>> querysLikeNotice(String titleTemp, String openDate);
-
-	void insertSnatchRelation(String mainId, String nextId);
-
-	//查询2个公告id所关联的所有公告id（不包含自己）
-	List<String> querysDifferNextId(String zhaobId, String thisId);
-
-	/**
-	 * 招标公告插入ES(新增)
-	 * @param notice
-     */
-	void insertZhaobiaoEsNotice(EsNotice notice);
+//	/**
+//	 * 招标公告插入ES(新增)
+//	 * @param notice
+//     */
+//	void insertZhaobiaoEsNotice(EsNotice notice);
 
 	/**
 	 * 招标公告更新ES(新增)
