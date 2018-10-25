@@ -95,7 +95,6 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
 
     @Override
     public boolean executeRule(EsNotice esNotice) {
-        logger.info("通用去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         boolean isNewNotice = false;
         String filterState="";
         Set<EsNotice> matchSet = null;//根据标题等维度匹配，疑似公告总集合
@@ -137,14 +136,17 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
                     try {
                         matchSet = matchNoticeSet(esNotice, argMap);//匹配队列
                         if (matchSet.size() <= 0) {
-                            logger.info("2.3标题匹配队列为空。。条件[argMap:" + argMap + "]");
+                            logger.info("2.3[redis:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"]标题匹配队列为空。。条件[argMap:" + argMap + "]");
                             filterState = IS_NEW;//异常情况，不做去重
                         } else {
                             removeRepetitionSet(matchSet);
                             logger.debug("匹配队列去重完毕。[matchSet:"+matchSet.size()+"]");
                             //3.执行去重逻辑，过滤内容等
     //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
+                            long t = System.currentTimeMillis();
+                            logger.info("@@@开始执行过滤规则[redis:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"]。。。");
                             filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.7版本过滤规则
+                            logger.info("@@@过滤规则执行完毕[filterState:"+filterState+"][redis:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"]。。。"+(System.currentTimeMillis()-t)+"ms");
                         }
                         isRetry = false;
                     } catch (MyRetryException rt) {
@@ -155,6 +157,7 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
                 }while (isRetry && retryCount>0);
             }
 
+            logger.info("去重判定结果[title:"+esNotice.getTitle()+"][filterState:"+filterState+"]");
             if(filterState.equals(IS_NEW)){//不重复，公告直接入库，需关联
                 logger.info("公告不重复，直接入库。[title:"+title+"][type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"]");
                 handleNotRepeat(esNotice);
@@ -165,17 +168,15 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
             }else if(filterState.equals(IS_REPEATED)){//已经被去重，无需关联
                 isNewNotice = false;
             }else {
-                logger.error("异常情况[filterState:"+filterState+"]，新公告入库。[title:"+title+"][type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"][type:"+esNotice.getType()+"]");
+                logger.error("异常情况[title:"+esNotice.getTitle()+"][filterState:"+filterState+"]，新公告入库。[type:"+esNotice.getType()+"][ur:"+esNotice.getUrl()+"][type:"+esNotice.getType()+"]");
                 handleNotRepeat(esNotice);
-//                noticeCleanService.insertSnatchurlRepetition(esNotice);
-                isNewNotice = false;
+                isNewNotice = true;
             }
         }catch (Exception e){
             logger.error("###去重规则异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
             matchSet=null;
             System.gc();
-            logger.info("####通用去重规则结束:[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         }
         return isNewNotice;
     }

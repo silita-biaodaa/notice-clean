@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class EsNotice implements Serializable,Comparable{
 
 	private static final long serialVersionUID = 1L;
+	private Integer snatchurlId=null;
 	private Integer isShow;
 	private String source;//数据源标识
 	private String uuid;
@@ -43,6 +44,14 @@ public class EsNotice implements Serializable,Comparable{
 	private Integer edit;
 
 	private String detailTabName;
+
+	public Integer getSnatchurlId() {
+		return snatchurlId;
+	}
+
+	public void setSnatchurlId(Integer snatchurlId) {
+		this.snatchurlId = snatchurlId;
+	}
 
 	public String getDetailTabName() {
 		return detailTabName;
