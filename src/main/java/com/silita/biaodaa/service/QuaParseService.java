@@ -4,8 +4,10 @@ import com.silita.biaodaa.common.Constant;
 import com.silita.biaodaa.common.config.CustomizedPropertyConfigurer;
 import com.silita.biaodaa.common.elastic.indexes.IdxZhaobiaoSnatch;
 import com.silita.biaodaa.common.elastic.model.ElasticEntity;
+import com.silita.biaodaa.dao.CleanMapper;
 import com.silita.biaodaa.dao.SnatchpressMapper;
 import com.silita.biaodaa.utils.CommonUtil;
+import com.silita.biaodaa.utils.RouteUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,8 @@ public class QuaParseService {
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
 
+    @Autowired
+    private CleanMapper cleanMapper;
 
 
     /**
@@ -128,7 +132,7 @@ public class QuaParseService {
 //            }
 //        }
 
-
+        boolean hasZz= false;
         for (int k = 0; k < zh.size(); k++) {
             Map<String, Object> mapname = snatchpressMapper.getAptitudeDictionary(zh.get(k).get("uuid").toString());
             if(mapname !=null){
@@ -148,8 +152,17 @@ public class QuaParseService {
                         param.put("certTable","snatch_url_cert_others");
                     }
                     snatchpressMapper.insertSnatchUrlCert(param);
+                    hasZz=true;
                 }
             }
+        }
+        if(hasZz){
+            //有资质，更新排序状态
+            Map param = new HashMap<String, Object>();
+            param.put("id",id);
+            param.put("tableName", RouteUtils.routeTableName("mishu.snatchurl", source));
+            param.put("orderNo",2);
+            cleanMapper.updateNoticePx(param);
         }
 
         //公告建造师匹配暂停
