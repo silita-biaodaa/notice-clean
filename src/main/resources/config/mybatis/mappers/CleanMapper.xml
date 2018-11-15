@@ -61,5 +61,9 @@
         WHERE id=#{uuid}
     </update>
 
-
+    <update id="updateNoticePx" parameterType="java.util.Map">
+        UPDATE ${tableName}
+        SET px=#{orderNo}
+        WHERE id=#{id}
+    </update>
 </mapper>

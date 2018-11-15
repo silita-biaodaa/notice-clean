@@ -10,6 +10,7 @@ import com.silita.biaodaa.model.SnatchUrl;
 import com.silita.biaodaa.model.SnatchurlRepetition;
 import com.silita.biaodaa.rules.exception.MyRetryException;
 import com.silita.biaodaa.utils.ChineseCompressUtil;
+import com.silita.biaodaa.utils.MyStringUtils;
 import com.silita.biaodaa.utils.RouteUtils;
 import com.snatch.model.EsNotice;
 import org.apache.log4j.Logger;
@@ -226,6 +227,23 @@ public class NoticeCleanService {
         snatchurlParams.put("businessType", esNotice.getBusinessType());
         snatchurlParams.put("source", esNotice.getSource());
         snatchurlParams.put("isShow", esNotice.getIsShow() == null ? 0 : esNotice.getIsShow());
+        int orderNo= 0;
+        if (esNotice.getType() == 2) {
+            //中标
+            if(esNotice.getDetailZhongBiao().getOneName() != null){
+                orderNo=2;
+            }else{
+                orderNo=1;
+            }
+        }else{
+            //招标
+            if(MyStringUtils.isNotNull(esNotice.getDetail().getPbMode())){
+                orderNo=2;
+            }else{
+                orderNo=1;
+            }
+        }
+        snatchurlParams.put("orderNo",orderNo);
         //添加公告基本信息
         snatchurlMapper.insertSnatchUrl(snatchurlParams);
         logger.info("########新插入公告：[source:"+esNotice.getSource()+"][isShow:"+esNotice.getIsShow()+"][title:"+esNotice.getTitle()+"][redis:"+esNotice.getRedisId()+"][type:"+esNotice.getType()+"][url:"+esNotice.getUrl()+"]");

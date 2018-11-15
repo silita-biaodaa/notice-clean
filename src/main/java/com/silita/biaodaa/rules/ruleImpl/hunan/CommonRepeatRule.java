@@ -47,13 +47,11 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
 
     private void formatContent(EsNotice n){
         String c = n.getContent();
-        c = c.replaceAll("'","\'");
-        c = c.replaceAll("‘","\'");
-        c = c.replaceAll("’","\'");
-        c = c.replaceAll("\"","\\\"");
-        c = c.replaceAll("“","\\\"");
-        c = c.replaceAll("”","\\\"");
+        c = c.replaceAll("['‘’]","\'");
+        c = c.replaceAll("[\"“”]","\\\"");
         n.setContent(c);
+        c=null;
+        System.gc();
     }
 
     /**

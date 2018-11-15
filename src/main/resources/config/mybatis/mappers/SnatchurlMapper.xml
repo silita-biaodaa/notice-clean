@@ -53,14 +53,14 @@
         `status`, `openDate`, `range`, `edit`, `randomNum`,
         `biddingType`, `otherType`, `tableName`, `suuid`, `province`,
         `city`, `county`, `rank`, `redisId`, `websitePlanId`,
-        `uuid`, `businessType`, `source`, `isShow`
+        `uuid`, `businessType`, `source`, `isShow`,px
         )
         VALUES(
         #{url}, #{title}, NOW(), 2, #{type},
         1, DATE_FORMAT(#{openDate},'%Y-%m-%d'), YEAR(#{openDate}), #{edit}, 0,
         #{biddingType}, #{otherType}, #{tableName}, REPLACE(UUID(),'-',''), #{province},
         #{city}, #{county}, #{rank}, #{redisId}, #{websitePlanId},
-        #{uuid}, #{businessType}, #{source}, #{isShow}
+        #{uuid}, #{businessType}, #{source}, #{isShow},#{orderNo}
         )
     </insert>
 
