@@ -109,7 +109,6 @@ public class MyKafkaConsumer {
             if(msg instanceof Map) {
                 Map vo = (Map) msg;
                 EsNotice notice = (EsNotice) vo.get("model");
-                rankAdapter(notice);
                 LoggerUtils.showJVM("接收到kafka消息:[start:"+vo.get("start")+"][areaRank:"+notice.getAreaRank()+"][redisid:"+notice.getRedisId()+"][source:"+notice.getSource()+"][ur:"+notice.getUrl()+"]" + notice.getTitle() + notice.getOpenDate());
                 try {
                     disruptorOperator.publishNoticeClean(notice);
@@ -122,21 +121,6 @@ public class MyKafkaConsumer {
             consumer.commitOffsets();
         }
     }
-
-    /**
-     * 等级适配
-     * 没有等级的，设置到rank=1 市级
-     * @param notice
-     */
-    private void rankAdapter(EsNotice notice){
-        String areaRank = notice.getAreaRank();
-        if(areaRank==null){
-            areaRank ="1";
-        }
-        notice.setRank(Integer.parseInt(areaRank));
-    }
-
-
 
     private ConsumerConnector createConsumer() {
         return Consumer.createJavaConsumerConnector(new ConsumerConfig(properties));
