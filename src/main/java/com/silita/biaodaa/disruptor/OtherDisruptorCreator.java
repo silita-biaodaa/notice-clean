@@ -7,6 +7,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.silita.biaodaa.disruptor.event.AnalyzeEvent;
 import com.silita.biaodaa.disruptor.exception.AnalyzeException;
+import com.silita.biaodaa.disruptor.handle.notice.EndingHandle;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class OtherDisruptorCreator {
         }
     };
 
-    private static final int BUFFER_SIZE = 512;
+    private static final int BUFFER_SIZE = 1024*2;
 
     //TODO 需要根据其他因素调整线程数量
     private static final int THREAD_NUM = 2;
@@ -37,14 +38,14 @@ public class OtherDisruptorCreator {
     /**
      * 利用spring完成初始化，singleton
      */
-    public static synchronized void initDisruptor(List<EventHandler> parallelHandle) {
+    public static synchronized void initDisruptor(List<EventHandler> parallelHandle,EndingHandle endingHandle) {
         if (processDisruptor == null) {
             logger.info("..........OtherDisruptorCreator init..........\nDISRUPTOR BUFFER_SIZE:" + BUFFER_SIZE + " THREAD_NUM:" + THREAD_NUM);
             EventHandler[] handlers = new EventHandler[parallelHandle.size()];
             processDisruptor = new Disruptor<AnalyzeEvent>(EVENT_FACTORY, BUFFER_SIZE, EXECUTOR, ProducerType.SINGLE, new SleepingWaitStrategy());
             processDisruptor.handleExceptionsWith(new AnalyzeException());
             parallelHandle.toArray(handlers);
-            processDisruptor.handleEventsWith(handlers);
+            processDisruptor.handleEventsWith(handlers).then(endingHandle);
             logger.info("..........OtherDisruptorCreator init success..........");
         }
     }

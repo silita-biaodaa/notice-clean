@@ -371,250 +371,245 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         return flag;
     }
 
-    /**
-     * 湖南公告入库
-     */
-    @Override
-    public boolean insertEsNotice(EsNotice notice) {
-
-        logger.info("新公告title：" + notice.getTitle());
-
-        //url判断（已存在不入库）
-        String CountNoticeUrlSql = "SELECT COUNT(*) FROM mishu.snatchurl WHERE url = ? and openDate = ?";
-        int NoticeCount = this.queryForInt(CountNoticeUrlSql, new Object[]{notice.getUrl(), notice.getOpenDate()});
-        if (NoticeCount != 0) {
-            logger.info("####数据库中已存在相同url:" + notice.getUrl() + "####");
-            return false;
-        }
-        notice.setTitle(notice.getTitle().trim());    //去title首尾空格
-
-        String snatchNumber = notice.getSnatchNumber();
-        if (StringUtils.isBlank(snatchNumber)) {
-            notice.setSnatchNumber("");
-        }
-        String businessType = notice.getBusinessType();
-        if (StringUtils.isBlank(businessType)) {
-            notice.setBusinessType("");
-        }
-
-        if (StringUtils.isNotBlank(businessType) && businessType.equals("0")) {
-            businessType = "3";
-        }else {
-            //判断公告是什么类型
-            if (notice.getTitle().indexOf("设计") != -1) {
-                businessType = "1";
-            } else if (notice.getTitle().indexOf("监理") != -1) {
-                businessType = "2";
-            } else if (notice.getTitle().indexOf("采购") != -1 || notice.getTitle().indexOf("谈判") != -1 || notice.getTitle().indexOf("磋商") != -1) {
-                businessType = "3";
-            } else if (notice.getTitle().indexOf("勘察") != -1) {
-                businessType = "4";
-            } else if (notice.getTitle().indexOf("检测") != -1) {
-                businessType = "5";
-            } else {
-                businessType = "0";
-            }
-        }
-        notice.setBiddingType(businessType);
-        // type属性分离为2个字段（type otherType）
-        int type = notice.getType();
-        int otherType = 0;
-        if (type < 10) {
-            if (notice.getTitle().indexOf("补充") != -1) {
-                otherType = 1;
-            } else if (notice.getTitle().indexOf("答疑") != -1) {
-                otherType = 2;
-            } else if (notice.getTitle().indexOf("流标") != -1) {
-                otherType = 3;
-            } else if (notice.getTitle().indexOf("澄清") != -1) {
-                otherType = 4;
-            } else if (notice.getTitle().indexOf("延期") != -1) {
-                otherType = 5;
-            } else if (notice.getTitle().indexOf("更正公告") != -1) {
-                otherType = 6;
-            } else if (notice.getTitle().indexOf("废标") != -1 && notice.getTitle().indexOf("终止") != -1) {
-                otherType = 7;
-            } else if (notice.getTitle().indexOf("终止") != -1) {
-                otherType = 8;
-            }
-        } else if (type == 11) {
-            otherType = 1;
-        } else if (type == 12) {
-            otherType = 2;
-        } else if (type == 13) {
-            otherType = 3;
-        } else if (type == 14) {
-            otherType = 4;
-        } else if (type == 15) {
-            otherType = 5;
-        } else if (type == 16) {
-            otherType = 6;
-        } else if (type == 17) {
-            otherType = 7;
-        } else if (type == 18) {
-            otherType = 8;
-        } else if (type == 19) {
-            otherType = 9;
-        } else if (type == 20) {
-            otherType = 10;
-        } else if (type == 21) {
-            otherType = 11;
-        } else if (type == 22) {
-            otherType = 12;
-        } else if (type == 23) {
-            otherType = 13;
-        } else if (type == 24) {
-            otherType = 14;
-        } else {
-            otherType = type;
-        }
-        if (type == 2 || type == 5 || type == 51 || type == 52) {
-            type = 2;
-        } else {
-            type = 0;
-        }
-        notice.setOtherType(String.valueOf(otherType));
-        notice.setType(type);
-
-        String areaRank = notice.getAreaRank();
-        if (StringUtils.isBlank(areaRank) || areaRank.equals("___")) {
-            //查询湖南的抓取的网站和当前url做对比。获取网站等级
-            List<Map<String, Object>> webList = service.querysWebSitePlan(notice.getTableName().replaceAll("mishu.", ""));
-            Integer rank = 0;
-            for (Map<String, Object> wm : webList) {
-                if (notice.getUrl().indexOf(String.valueOf(wm.get("url"))) > -1) {
-                    rank = Integer.valueOf(String.valueOf(wm.get("rank")));
-                    notice.setWebsitePlanId(Integer.valueOf(String.valueOf(wm.get("id"))));
-                    break;
-                }
-            }
-            notice.setRank(rank);
-        } else {
-            notice.setRank(Integer.parseInt(areaRank));
-        }
-        if (notice.getWebsitePlanId() == null) {
-            notice.setWebsitePlanId(0);
-        }
-
-        if (notice.getType() == 2) {
-            AnalyzeDetailZhongBiao detailZhongBiao = notice.getDetailZhongBiao();
-            if (detailZhongBiao == null){
-                detailZhongBiao = new AnalyzeDetailZhongBiao();
-            }
-            detailZhongBiao.setGsDate(notice.getOpenDate());
-            notice.setDetailZhongBiao(detailZhongBiao);
-        } else {
-            AnalyzeDetail detail = notice.getDetail();
-            if (detail == null) {
-                detail = new AnalyzeDetail();
-            }
-            detail.setGsDate(notice.getOpenDate());
-            notice.setDetail(detail);
-        }
-
-
-        LoggerUtils.showJVM("去重规则开始");
-        //抓取批次不为空进行新去重判断
-        if (StringUtils.isNotBlank(notice.getSnatchNumber())) {
-            // 使用新增公告的标题和公示时间进行查询
-            String tempOtherType = checkMainWebSide(notice.getUrl()) ? "" : notice.getOtherType();
-            List<EsNotice> noticeList = new ArrayList<>();
-            String titleCond = notice.getTitle();
-            titleCond = notice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(titleCond) : MyStringUtils.subZhaobiaoTile(titleCond);
-            titleCond = MyStringUtils.trimInnerSpaceStr(titleCond);    //去title首尾空格
-            if (StringUtils.isNotBlank(titleCond)) {//过滤关键字后为空串的直接插入
-                long repStartTime = System.currentTimeMillis(); // 去重开始时间
-                noticeList = this.queryNoticeList(notice.getOpenDate(), notice.getType(), tempOtherType, notice.getCity());//根据标题查询公示时间前后3天的
-                logger.info("##### 查询消耗时间：" + (System.currentTimeMillis() - repStartTime) + " ms #####");
-            }
-
-            //只获取标题相似度高的公告
-            if (!noticeList.isEmpty()) {
-                List<EsNotice> repeatNotices = new ArrayList<>();
-                String newTitle = notice.getTitle();
-                newTitle = notice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(newTitle) : MyStringUtils.subZhaobiaoTile(newTitle);
-                String newContent = chineseCompressUtil.getPlainText(notice.getContent());
-                newContent = MyStringUtils.deleteHtmlTag(newContent);
-                newContent = newContent.replaceAll(" ", "");
-                String tempKeyWord = "标段";
-                for (EsNotice tempNotice : noticeList) {
-                    String tempTitle = tempNotice.getTitle();
-                    tempTitle = tempNotice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(tempTitle) : MyStringUtils.subZhaobiaoTile(tempTitle);
-                    String tempContent = chineseCompressUtil.getPlainText(tempNotice.getContent());
-                    tempContent = MyStringUtils.deleteHtmlTag(tempContent);
-                    tempContent = tempContent.replaceAll(" ", "");
-                    if (newTitle.equals(tempTitle)) {
-                        logger.debug("标题完全一样");
-                        if (hasCzAndHnUrl(tempNotice.getUrl(),notice.getUrl())) {
-                            // 郴州与省网去重
-                            if ((tempNotice.getUrl().contains(czggzy) || notice.getUrl().contains(czggzy)) && ComputeResemble.similarDegreeWrapper(newContent, tempContent) < 0.2) {
-                                if (tempContent.length() < 100 || newContent.length() < 100) {
-                                    repeatNotices.add(tempNotice);
-                                    break;
-                                }
-                            } else {
-                                repeatNotices.add(tempNotice);
-                                break;
-                            }
-                        } else if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.2) {
-                            logger.debug("详情似度大于20%，应该去重。。");
-                            //存在标题一致的优先去重
-                            repeatNotices.add(tempNotice);
-                            break;
-                        }
-                    } else if (!tempTitle.contains(tempKeyWord) && ComputeResemble.similarDegreeWrapper(newTitle, tempTitle) > 0.8) {
-                        logger.debug("标题相似度大于80%，进行详情比对。。");
-                        if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.99) {
-                            logger.debug("详情似度大于99%，应该去重。。");
-                            repeatNotices.add(tempNotice);
-                        }
-                    } else if (tempTitle.contains(tempKeyWord) && ComputeResemble.similarDegreeWrapper(newTitle, tempTitle) > 0.97) {
-                        logger.debug("标题相似度大于97%，进行详情比对。。");
-                        if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.99999) {
-                            logger.debug("详情似度大于99.999%，应该去重。。");
-                            repeatNotices.add(tempNotice);
-                        }
-                    }
-                }
-                noticeList = repeatNotices;
-            }
-
-            if (noticeList.isEmpty()) {
-                logger.info("####前后3天无相同标题公告，入库!titlt:[" + notice.getTitle() + "]####");
-                handleNotRepeatZhaobiao(notice);
-                if (notice.getType() == 2)
-                    insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
-                else
-                    insertZhaobiaoAnalyzeDetail(notice.getDetail(), notice);
-                return true;
-            } else if (noticeList.size() == 1) {
-                // 根据网站等级去重，保留网站等级低的公告，去除网站等级高的
-                logger.info("####开始依据网站等级去重和保留!####");
-                long repStartTime = System.currentTimeMillis(); // 去重开始时间
-                handleRepeat(noticeList.get(0), notice);
-                logger.info("##### 去重消耗时间：" + (System.currentTimeMillis() - repStartTime) + " ms #####");
-                return false;
-            } else {
-                handleNotRepeatZhaobiao(notice);
-                if (notice.getType() == 2)
-                    insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
-                else
-                    insertZhaobiaoAnalyzeDetail(notice.getDetail(), notice);
-                logger.warn("多条公告重复，不替换，noticeList：" + JSON.toJSONString(noticeList) + " ms #####");
-                return false;
-            }
-        } else {
-            // 使用以前的去重规则
-            LoggerUtils.showJVM("采用旧的去重规则");
-            if (notice.getType() == 2) {
-                return this.oldZhongBiaoReption(notice);
-            }else {
-                return this.oldZhaoBiaoReption(notice);
-            }
-
-        }
-
-    }
+//    /**
+//     * 湖南公告入库
+//     */
+//    @Override
+//    public boolean insertEsNotice(EsNotice notice) {
+//
+//        logger.info("新公告title：" + notice.getTitle());
+//
+//        //url判断（已存在不入库）
+//        String CountNoticeUrlSql = "SELECT COUNT(*) FROM mishu.snatchurl WHERE url = ? and openDate = ?";
+//        int NoticeCount = this.queryForInt(CountNoticeUrlSql, new Object[]{notice.getUrl(), notice.getOpenDate()});
+//        if (NoticeCount != 0) {
+//            logger.info("####数据库中已存在相同url:" + notice.getUrl() + "####");
+//            return false;
+//        }
+//        notice.setTitle(notice.getTitle().trim());    //去title首尾空格
+//
+//        String snatchNumber = notice.getSnatchNumber();
+//        if (StringUtils.isBlank(snatchNumber)) {
+//            notice.setSnatchNumber("");
+//        }
+//        String businessType = notice.getBusinessType();
+//        if (StringUtils.isBlank(businessType)) {
+//            notice.setBusinessType("");
+//        }
+//
+//        if (StringUtils.isNotBlank(businessType) && businessType.equals("0")) {
+//            businessType = "3";
+//        }else {
+//            //判断公告是什么类型
+//            if (notice.getTitle().indexOf("设计") != -1) {
+//                businessType = "1";
+//            } else if (notice.getTitle().indexOf("监理") != -1) {
+//                businessType = "2";
+//            } else if (notice.getTitle().indexOf("采购") != -1 || notice.getTitle().indexOf("谈判") != -1 || notice.getTitle().indexOf("磋商") != -1) {
+//                businessType = "3";
+//            } else if (notice.getTitle().indexOf("勘察") != -1) {
+//                businessType = "4";
+//            } else if (notice.getTitle().indexOf("检测") != -1) {
+//                businessType = "5";
+//            } else {
+//                businessType = "0";
+//            }
+//        }
+//        notice.setBiddingType(businessType);
+//        // type属性分离为2个字段（type otherType）
+//        int type = notice.getType();
+//        int otherType = 0;
+//        if (type < 10) {
+//            if (notice.getTitle().indexOf("补充") != -1) {
+//                otherType = 1;
+//            } else if (notice.getTitle().indexOf("答疑") != -1) {
+//                otherType = 2;
+//            } else if (notice.getTitle().indexOf("流标") != -1) {
+//                otherType = 3;
+//            } else if (notice.getTitle().indexOf("澄清") != -1) {
+//                otherType = 4;
+//            } else if (notice.getTitle().indexOf("延期") != -1) {
+//                otherType = 5;
+//            } else if (notice.getTitle().indexOf("更正公告") != -1) {
+//                otherType = 6;
+//            } else if (notice.getTitle().indexOf("废标") != -1 && notice.getTitle().indexOf("终止") != -1) {
+//                otherType = 7;
+//            } else if (notice.getTitle().indexOf("终止") != -1) {
+//                otherType = 8;
+//            }
+//        } else if (type == 11) {
+//            otherType = 1;
+//        } else if (type == 12) {
+//            otherType = 2;
+//        } else if (type == 13) {
+//            otherType = 3;
+//        } else if (type == 14) {
+//            otherType = 4;
+//        } else if (type == 15) {
+//            otherType = 5;
+//        } else if (type == 16) {
+//            otherType = 6;
+//        } else if (type == 17) {
+//            otherType = 7;
+//        } else if (type == 18) {
+//            otherType = 8;
+//        } else if (type == 19) {
+//            otherType = 9;
+//        } else if (type == 20) {
+//            otherType = 10;
+//        } else if (type == 21) {
+//            otherType = 11;
+//        } else if (type == 22) {
+//            otherType = 12;
+//        } else if (type == 23) {
+//            otherType = 13;
+//        } else if (type == 24) {
+//            otherType = 14;
+//        } else {
+//            otherType = type;
+//        }
+//        notice.setOtherType(String.valueOf(otherType));
+//        notice.setType(RuleUtils.noticeTypeAdapter(notice));
+//
+//        String areaRank = notice.getAreaRank();
+//        if (StringUtils.isBlank(areaRank) || areaRank.equals("___")) {
+//            //查询湖南的抓取的网站和当前url做对比。获取网站等级
+//            List<Map<String, Object>> webList = service.querysWebSitePlan(notice.getTableName().replaceAll("mishu.", ""));
+//            Integer rank = 0;
+//            for (Map<String, Object> wm : webList) {
+//                if (notice.getUrl().indexOf(String.valueOf(wm.get("url"))) > -1) {
+//                    rank = Integer.valueOf(String.valueOf(wm.get("rank")));
+//                    notice.setWebsitePlanId(Integer.valueOf(String.valueOf(wm.get("id"))));
+//                    break;
+//                }
+//            }
+//            notice.setRank(rank);
+//        } else {
+//            notice.setRank(Integer.parseInt(areaRank));
+//        }
+//        if (notice.getWebsitePlanId() == null) {
+//            notice.setWebsitePlanId(0);
+//        }
+//
+//        if (notice.getType() == 2) {
+//            AnalyzeDetailZhongBiao detailZhongBiao = notice.getDetailZhongBiao();
+//            if (detailZhongBiao == null){
+//                detailZhongBiao = new AnalyzeDetailZhongBiao();
+//            }
+//            detailZhongBiao.setGsDate(notice.getOpenDate());
+//            notice.setDetailZhongBiao(detailZhongBiao);
+//        } else {
+//            AnalyzeDetail detail = notice.getDetail();
+//            if (detail == null) {
+//                detail = new AnalyzeDetail();
+//            }
+//            detail.setGsDate(notice.getOpenDate());
+//            notice.setDetail(detail);
+//        }
+//
+//
+//        LoggerUtils.showJVM("去重规则开始");
+//        //抓取批次不为空进行新去重判断
+//        if (StringUtils.isNotBlank(notice.getSnatchNumber())) {
+//            // 使用新增公告的标题和公示时间进行查询
+//            String tempOtherType = checkMainWebSide(notice.getUrl()) ? "" : notice.getOtherType();
+//            List<EsNotice> noticeList = new ArrayList<>();
+//            String titleCond = notice.getTitle();
+//            titleCond = notice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(titleCond) : MyStringUtils.subZhaobiaoTile(titleCond);
+//            titleCond = MyStringUtils.trimInnerSpaceStr(titleCond);    //去title首尾空格
+//            if (StringUtils.isNotBlank(titleCond)) {//过滤关键字后为空串的直接插入
+//                long repStartTime = System.currentTimeMillis(); // 去重开始时间
+//                noticeList = this.queryNoticeList(notice.getOpenDate(), notice.getType(), tempOtherType, notice.getCity());//根据标题查询公示时间前后3天的
+//                logger.info("##### 查询消耗时间：" + (System.currentTimeMillis() - repStartTime) + " ms #####");
+//            }
+//
+//            //只获取标题相似度高的公告
+//            if (!noticeList.isEmpty()) {
+//                List<EsNotice> repeatNotices = new ArrayList<>();
+//                String newTitle = notice.getTitle();
+//                newTitle = notice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(newTitle) : MyStringUtils.subZhaobiaoTile(newTitle);
+//                String newContent = chineseCompressUtil.getPlainText(notice.getContent());
+//                newContent = MyStringUtils.deleteHtmlTag(newContent);
+//                newContent = newContent.replaceAll(" ", "");
+//                String tempKeyWord = "标段";
+//                for (EsNotice tempNotice : noticeList) {
+//                    String tempTitle = tempNotice.getTitle();
+//                    tempTitle = tempNotice.getType() == 2 ? MyStringUtils.subZhongBiaoTile(tempTitle) : MyStringUtils.subZhaobiaoTile(tempTitle);
+//                    String tempContent = chineseCompressUtil.getPlainText(tempNotice.getContent());
+//                    tempContent = MyStringUtils.deleteHtmlTag(tempContent);
+//                    tempContent = tempContent.replaceAll(" ", "");
+//                    if (newTitle.equals(tempTitle)) {
+//                        logger.debug("标题完全一样");
+//                        if (hasCzAndHnUrl(tempNotice.getUrl(),notice.getUrl())) {
+//                            // 郴州与省网去重
+//                            if ((tempNotice.getUrl().contains(czggzy) || notice.getUrl().contains(czggzy)) && ComputeResemble.similarDegreeWrapper(newContent, tempContent) < 0.2) {
+//                                if (tempContent.length() < 100 || newContent.length() < 100) {
+//                                    repeatNotices.add(tempNotice);
+//                                    break;
+//                                }
+//                            } else {
+//                                repeatNotices.add(tempNotice);
+//                                break;
+//                            }
+//                        } else if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.2) {
+//                            logger.debug("详情似度大于20%，应该去重。。");
+//                            //存在标题一致的优先去重
+//                            repeatNotices.add(tempNotice);
+//                            break;
+//                        }
+//                    } else if (!tempTitle.contains(tempKeyWord) && ComputeResemble.similarDegreeWrapper(newTitle, tempTitle) > 0.8) {
+//                        logger.debug("标题相似度大于80%，进行详情比对。。");
+//                        if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.99) {
+//                            logger.debug("详情似度大于99%，应该去重。。");
+//                            repeatNotices.add(tempNotice);
+//                        }
+//                    } else if (tempTitle.contains(tempKeyWord) && ComputeResemble.similarDegreeWrapper(newTitle, tempTitle) > 0.97) {
+//                        logger.debug("标题相似度大于97%，进行详情比对。。");
+//                        if (ComputeResemble.similarDegreeWrapper(newContent, tempContent) > 0.99999) {
+//                            logger.debug("详情似度大于99.999%，应该去重。。");
+//                            repeatNotices.add(tempNotice);
+//                        }
+//                    }
+//                }
+//                noticeList = repeatNotices;
+//            }
+//
+//            if (noticeList.isEmpty()) {
+//                logger.info("####前后3天无相同标题公告，入库!titlt:[" + notice.getTitle() + "]####");
+//                handleNotRepeatZhaobiao(notice);
+//                if (notice.getType() == 2)
+//                    insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
+//                else
+//                    insertZhaobiaoAnalyzeDetail(notice.getDetail(), notice);
+//                return true;
+//            } else if (noticeList.size() == 1) {
+//                // 根据网站等级去重，保留网站等级低的公告，去除网站等级高的
+//                logger.info("####开始依据网站等级去重和保留!####");
+//                long repStartTime = System.currentTimeMillis(); // 去重开始时间
+//                handleRepeat(noticeList.get(0), notice);
+//                logger.info("##### 去重消耗时间：" + (System.currentTimeMillis() - repStartTime) + " ms #####");
+//                return false;
+//            } else {
+//                handleNotRepeatZhaobiao(notice);
+//                if (notice.getType() == 2)
+//                    insertZhongbiaoAnalyzeDetail(notice.getDetailZhongBiao(), notice);
+//                else
+//                    insertZhaobiaoAnalyzeDetail(notice.getDetail(), notice);
+//                logger.warn("多条公告重复，不替换，noticeList：" + JSON.toJSONString(noticeList) + " ms #####");
+//                return false;
+//            }
+//        } else {
+//            // 使用以前的去重规则
+//            LoggerUtils.showJVM("采用旧的去重规则");
+//            if (notice.getType() == 2) {
+//                return this.oldZhongBiaoReption(notice);
+//            }else {
+//                return this.oldZhaoBiaoReption(notice);
+//            }
+//
+//        }
+//
+//    }
 
     private void insertZhaobiaoAnalyzeDetail(AnalyzeDetail zhaobiaoDetail, EsNotice notice) {
         //把解析结果插入维度临时表，根据业务字段匹配规则进行去重
@@ -758,23 +753,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
 
     @Override
     public void handleNotRepeatZhaobiao(EsNotice notice) {
-        /*if (notice.getTitle().indexOf("采购") != -1 || notice.getTitle().indexOf("谈判") != -1
-                || notice.getTitle().indexOf("磋商") != -1) { //是采购
-            //！！！注意  这里的id是在原snatchurl表最大id+1 删除snatchutl表数据 采购公告资质可能出错（snatch_url_cert.contId对不上）！！！
-            int id = this.queryForInt("select max(id) from mishu.snatchurl", new Object[]{}) + 1;
-            String uuid = String.valueOf(id);
-            //招标公告进入资质解析
-            if (notice.getType() != 2) {
-                List<Map<String, Object>> zh = service.queryzh();//所有资质
-                List list = snatchDao.insertUrlCertCg(Integer.parseInt(uuid), zh, notice);    //插入资质(snatch_url_cert)
-                if (list.size() != 0) {  //有资质的采购公告才入库
-                    this.insertNotice(notice);//插入公告内容以及url表
-                    notice.setUuid(uuid);
-                    insertEsNoticeElasticSearch(notice);//插入到搜索引擎
-                }
-            }
-        }
-        else {    //不变*/
         Map<String, String> map = this.insertNotice(notice);//插入公告内容以及url表
         String uuid = map.get("id");
         String otherType = map.get("otherType");
@@ -1275,7 +1253,7 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         }
     }
 
-    @Override
+    
     public void insertEsNoticeElasticSearch(EsNotice notice) {
         try {
             if (notice != null) {
@@ -1559,7 +1537,7 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
                 ad.getOneUUid(),
                 ad.getOneOffer(),
                 ad.getOneProjDuty(),
-                ad.getOneProjDutyUUid(),
+                ad.getOneProjDutyUuid(),
                 ad.getOneSkillDuty(),
                 ad.getOneSgy(),
                 ad.getOneAqy(),
@@ -1612,7 +1590,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         return result > 0;
     }
 
-    @Override
     public boolean insertEsNoticeZhongBiao(EsNotice notice) {
         //url存在
         String CountNoticeUrlSql = "SELECT COUNT(*) FROM mishu.snatchurl WHERE url = ?";
@@ -1672,7 +1649,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         return bl;
     }
 
-    @Override
     public List<Map<String, Object>> querysLikeNotice(String titleTemp, String openDate) {
         if (MyStringUtils.isNull(titleTemp) || MyStringUtils.isNull(openDate)) {
             return null;
@@ -1685,7 +1661,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         return this.getJdbcTemplate().queryForList(sql, titleTemp + "%", openDate, openDate);
     }
 
-    @Override
     public void insertSnatchRelation(String mainId, String nextId) {
         String sql = "INSERT INTO mishu.snatchrelation (mainId, nextId, lastChangeTime,relationMethod)VALUES(?,?,NOW(),0)";
         this.getJdbcTemplate().update(sql, Long.valueOf(mainId), Long.valueOf(nextId));
@@ -1701,7 +1676,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
      *
      * @return
      */
-    @Override
     public List<String> querysDifferNextId(String zhaobId, String thisId) {
         String sql = "SELECT a.nextId FROM( SELECT nextId FROM mishu.snatchrelation WHERE mainId = ? AND nextId!=? " +
                      "UNION ALL " +
@@ -1714,7 +1688,6 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
         }
     }
 
-    @Override
     /**
      * 这个方法不用 招标入ES与资质在一起
      */
@@ -1814,15 +1787,18 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
             zhongbiaoDoc.setProjType(notice.getDetailZhongBiao().getProjType());
             zhongbiaoDoc.setPbMode(notice.getDetailZhongBiao().getPbMode());
             String projSum = notice.getDetailZhongBiao().getProjSum();
-            if (projSum != null && !projSum.trim().equals("")) {
+            if (MyStringUtils.isNotNull(projSum)) {
                 zhongbiaoDoc.setProjSum(Double.parseDouble(projSum));
             }
-
-            if (notice.getEdit() != null)
+            String oneOffer = notice.getDetailZhongBiao().getOneOffer();
+            if (MyStringUtils.isNotNull(oneOffer)) {
+                zhongbiaoDoc.setOneOffer(Double.parseDouble(oneOffer));
+            }
+            if (notice.getEdit() != null) {
                 zhongbiaoDoc.setEdit(notice.getEdit());
-            else
+            }else {
                 zhongbiaoDoc.setEdit(0);
-
+            }
 //            zhongbiaoDoc.setContent(notice.getContent());
             String gsDate = notice.getDetailZhongBiao().getGsDate();
             if (gsDate != null && !gsDate.trim().equals("")) {
@@ -1834,10 +1810,8 @@ public class SnatchNoticeHuNanDaoImpl extends JdbcBase implements SnatchNoticeHu
             zhongbiaoDoc.setProvince(notice.getProvince());  //省
             zhongbiaoDoc.setCity(notice.getCity());  //市
             zhongbiaoDoc.setCounty(notice.getCounty());  //地区
-
             zhongbiaoDoc.setType(notice.getType()); //类型:0招标信息，招标变更1，中标结果2
             zhongbiaoDoc.setTableName(notice.getTableName());    //表名
-
             elaticsearchUtils.saveOrUpdate(zhongbiaoDoc);
         }
     }

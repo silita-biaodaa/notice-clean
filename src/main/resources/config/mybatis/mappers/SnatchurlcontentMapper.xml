@@ -12,7 +12,7 @@
     </insert>
 
     <update id="updateSnatchurlContent" parameterType="Map">
-        UPDATE FROM ${snatchUrlContentTable}
+        UPDATE ${snatchUrlContentTable}
         SET content = #{content}
         WHERE snatchUrlId = #{snatchUrlId}
     </update>

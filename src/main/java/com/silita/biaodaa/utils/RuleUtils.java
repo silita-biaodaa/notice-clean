@@ -1,5 +1,7 @@
 package com.silita.biaodaa.utils;
 
+import com.snatch.model.EsNotice;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,6 +12,26 @@ import java.util.regex.Pattern;
  * Created by dh on 2018/6/28.
  */
 public class RuleUtils {
+
+    public static String SNATCHURL_ZHAOBIAO="0";
+
+    public static String SNATCHURL_ZHONGBIAO="2";
+
+    /**
+     * 提取旧逻辑中的type转换判断
+     * @param esNotice
+     * @return
+     */
+    public static int noticeTypeAdapter(EsNotice esNotice){
+        int type = esNotice.getType();
+        if (type == 2 || type == 5 || type == 51 || type == 52
+                ||esNotice.getTitle().endsWith("信息公示表")) {
+            type = 2;
+        } else {
+            type = 0;
+        }
+        return type;
+    }
 
     /**
      * 大写数字、阿拉伯数字、罗马数字统一转换为阿拉伯数字

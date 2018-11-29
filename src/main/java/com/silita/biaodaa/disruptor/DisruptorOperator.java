@@ -4,6 +4,7 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.silita.biaodaa.disruptor.event.AnalyzeEvent;
 import com.silita.biaodaa.disruptor.handle.notice.CleaningHandle;
+import com.silita.biaodaa.disruptor.handle.notice.EndingHandle;
 import com.silita.biaodaa.disruptor.handle.notice.QuaParseHandle;
 import com.snatch.model.EsNotice;
 import org.slf4j.Logger;
@@ -31,7 +32,8 @@ public class DisruptorOperator {
     @Autowired
     private QuaParseHandle quaParseHandle;
 
-
+    @Autowired
+    private EndingHandle endingHandle;
 
     private static EventTranslatorOneArg<AnalyzeEvent,EsNotice> eventTranslator = new EventTranslatorOneArg<AnalyzeEvent,EsNotice>() {
         @Override
@@ -45,10 +47,10 @@ public class DisruptorOperator {
      */
     @PostConstruct
     public void init() {
-        noticeCleanDisruptorCreator.initDisruptor(cleaningHandle);
+        noticeCleanDisruptorCreator.initDisruptor(cleaningHandle ,endingHandle);
         List<EventHandler> parallelHandleList = new ArrayList<EventHandler>();
         parallelHandleList.add(quaParseHandle);
-        otherDisruptorCreator.initDisruptor(parallelHandleList);
+        otherDisruptorCreator.initDisruptor(parallelHandleList,endingHandle);
     }
 
     public void publishNoticeClean(EsNotice esNotice) {

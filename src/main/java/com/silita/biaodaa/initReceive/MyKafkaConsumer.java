@@ -109,7 +109,7 @@ public class MyKafkaConsumer {
             if(msg instanceof Map) {
                 Map vo = (Map) msg;
                 EsNotice notice = (EsNotice) vo.get("model");
-                LoggerUtils.showJVM("接收到kafka消息:[start:"+vo.get("start")+"][redisid:"+notice.getRedisId()+"][source:"+notice.getSource()+"][ur:"+notice.getUrl()+"]" + notice.getTitle() + notice.getOpenDate());
+                LoggerUtils.showJVM("接收到kafka消息:[start:"+vo.get("start")+"][areaRank:"+notice.getAreaRank()+"][redisid:"+notice.getRedisId()+"][source:"+notice.getSource()+"][ur:"+notice.getUrl()+"]" + notice.getTitle() + notice.getOpenDate());
                 try {
                     disruptorOperator.publishNoticeClean(notice);
                 }catch (Exception e){
@@ -121,8 +121,6 @@ public class MyKafkaConsumer {
             consumer.commitOffsets();
         }
     }
-
-
 
     private ConsumerConnector createConsumer() {
         return Consumer.createJavaConsumerConnector(new ConsumerConfig(properties));

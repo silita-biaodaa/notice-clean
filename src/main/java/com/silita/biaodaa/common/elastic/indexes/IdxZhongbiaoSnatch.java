@@ -49,6 +49,16 @@ public class IdxZhongbiaoSnatch extends ElasticEntity {
     @Field(type = FieldType.String)
     private String tableName;   //表名
 
+    @Field(type = FieldType.Double, store = true)
+    private Double oneOffer;  //第一中标候选人中标金额
+
+    public Double getOneOffer() {
+        return oneOffer;
+    }
+
+    public void setOneOffer(Double oneOffer) {
+        this.oneOffer = oneOffer;
+    }
 
     public String getSnatchId() {
         return snatchId;

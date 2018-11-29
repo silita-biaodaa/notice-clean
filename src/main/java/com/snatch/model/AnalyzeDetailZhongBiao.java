@@ -46,7 +46,7 @@ public class AnalyzeDetailZhongBiao implements Serializable {
     private String oneUUid;
     private String oneOffer;
     private String oneProjDuty;
-    private String oneProjDutyUUid;
+    private String oneProjDutyUuid;
     private String oneSkillDuty;
     private String oneSgy;
     private String oneAqy;
@@ -201,12 +201,12 @@ public class AnalyzeDetailZhongBiao implements Serializable {
         this.oneProjDuty = oneProjDuty;
     }
 
-    public String getOneProjDutyUUid() {
-        return oneProjDutyUUid;
+    public String getOneProjDutyUuid() {
+        return oneProjDutyUuid;
     }
 
-    public void setOneProjDutyUUid(String oneProjDutyUUid) {
-        this.oneProjDutyUUid = oneProjDutyUUid;
+    public void setOneProjDutyUuid(String oneProjDutyUuid) {
+        this.oneProjDutyUuid = oneProjDutyUuid;
     }
 
     public String getOneSkillDuty() {
@@ -376,4 +376,6 @@ public class AnalyzeDetailZhongBiao implements Serializable {
     public void setBlock(String block) {
         this.block = block;
     }
+
+
 }
