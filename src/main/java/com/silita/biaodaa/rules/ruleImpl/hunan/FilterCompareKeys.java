@@ -8,6 +8,7 @@ import org.apache.commons.collections.list.TreeList;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -98,7 +99,7 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
      * @return
      * @throws Exception
      */
-    private static List<String> extractKeysList(String content)throws Exception{
+    private List<String> extractKeysList(String content)throws Exception{
         List<String> keysList = new TreeList();
         String moneyReg = "([1-9][\\d]{0,10}|0)(\\.[\\d]{1,6})?([元]|[万元 \\n])";
         String dateTimeReg = "([1-9]\\d{1,3}[-年]+(0[1-9]|1[0-2]|[1-9])[-月]+(0[1-9]|[1-2][0-9]|3[0-1])[日]?)|((20|21|22|23|[0]?[0-1]\\d)[:：]+[0-5]\\d([:：]?[0-5]\\d)?)";
@@ -128,13 +129,33 @@ public class FilterCompareKeys extends HunanBaseRule implements RepeatFilter {
 
 
     private static List<String> matchSegmentList(String str,String regex){
-        List<String> resList= new TreeList();
-        Pattern ptn = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
-        Matcher matcher = ptn.matcher(str);
-        String tmp=null;
-        while (matcher.find()) {
-            tmp=  matcher.group();
-            resList.add(tmp);
+        List<String> resList= new ArrayList();
+        Pattern ptn = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = null;
+        String compareStr = null;
+        int start = 0;
+        int strSize = 200;
+        try {
+            do {
+                if (str.length() > start+strSize) {
+                    compareStr = str.substring(start, start+strSize);
+                }else{
+                    compareStr= str.substring(start,str.length());
+                }
+                start +=strSize;
+                matcher = ptn.matcher(compareStr);
+                String tmp = null;
+                while (matcher.find()) {
+                    tmp = matcher.group();
+                    resList.add(tmp);
+                }
+            }while (start<str.length());
+        }catch (Exception e){
+            logger.error(e,e);
+        }finally {
+            ptn=null;
+            matcher=null;
+            compareStr = null;
         }
         return resList;
     }

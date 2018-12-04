@@ -71,11 +71,16 @@ public class CleaningHandle implements EventHandler<AnalyzeEvent> {
                 && MyStringUtils.isNotNull(n.getDetailZhongBiao().getOneOffer())){
             String oneOffer = n.getDetailZhongBiao().getOneOffer();
             if(StringUtils.isNotBlank(oneOffer)) {
-                oneOffer = numberUnitChange(oneOffer, "(\\d{1,50}[,.]{0,5}\\d{1,50}[,.]{0,5}\\d{0,50}[,.]{0,5}\\d{0,50})", "(万|w|W)", 0.0001);
-                if (StringUtils.isNotBlank(oneOffer) && Double.parseDouble(oneOffer)>1) {
-                    n.getDetailZhongBiao().setOneOffer(oneOffer);
-                }else{
+                try {
+                    oneOffer = numberUnitChange(oneOffer, "(\\d{1,50}[,.]{0,5}\\d{1,50}[,.]{0,5}\\d{0,50}[,.]{0,5}\\d{0,50})", "(万|w|W)", 10000);
+                    if (StringUtils.isNotBlank(oneOffer) && Double.parseDouble(oneOffer) > 1) {
+                        n.getDetailZhongBiao().setOneOffer(oneOffer);
+                    } else {
+                        n.getDetailZhongBiao().setOneOffer(null);
+                    }
+                }catch (Exception e){
                     n.getDetailZhongBiao().setOneOffer(null);
+                    logger.error(e,e);
                 }
             }
         }
@@ -102,15 +107,17 @@ public class CleaningHandle implements EventHandler<AnalyzeEvent> {
         }
 
         DecimalFormat df = new DecimalFormat("#,###.######");
+        Double tmpD = null;
         try {
             if(!isUnit) {
                 Number n = df.parse(num);
                 Double d = n.doubleValue();
-                s = String.valueOf(d * unitRt);
+                tmpD = (d /unitRt);
+                s =df.format(tmpD);
             }else{
                 s = num;
             }
-            s = df.format(Double.parseDouble(s));
+            s=s.replaceAll(",","");
         } catch (Exception e) {
             s=null;
             logger.error(e, e);
