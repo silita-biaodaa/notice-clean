@@ -387,6 +387,7 @@ public abstract class HunanBaseRule {
                 disruptorOperator.publishQuaParse(notice);
             }
         }
+        notice=null;
     }
 
     /**
@@ -528,22 +529,7 @@ public abstract class HunanBaseRule {
                 if (esnt.getDetail() != null) {
                     detailId = esnt.getDetail().getId();
                 }
-//                //匹配集合进行相似度判断
-//                String esntPress = esnt.getPressContent();
-//                double computeNum = ComputeResemble.similarDegreeWrapper(esNotice.getPressContent(), esntPress);
-//                if (type == 2) {//中标公告20%
-//                    if (computeNum > 0.2) {
-//                        isRepeat = true;
-//                    }
-//                } else {//非中标公告85%
-//                    if (computeNum > 0.85) {
-//                        isRepeat = true;
-//                    }
-//                }
-//                logger.debug("相识度比对结果[type"+type+"][computeNum:"+computeNum+"][isRepeat:"+isRepeat+"][detailId:"+detailId+"]");
                 isRepeat=true;
-                double computeNum=0.9;
-                logger.debug("相识度比对取消`。。。");
 
                 //符合条件，进行去重判断
                 if (isRepeat) {
@@ -555,24 +541,16 @@ public abstract class HunanBaseRule {
                             repeatExecute = "delHis";
                         }
                     }else if(esNotice.getRank() == esnt.getRank()){
-                        if(computeNum==1){
-                            repeatExecute = "intoRepetition";
-                        }else{
-                            repeatExecute= "newReplaceHis";
-                        }
+                        repeatExecute= "newReplaceHis";
                     }else if(esNotice.getRank()==0 && esnt.getRank() != 0){
                         repeatExecute = "intoRepetition";
                     }else if(esNotice.getRank() != 0 && esnt.getRank() != 0){
-                        if(computeNum==1){
-                            repeatExecute = "intoRepetition";
-                        }else{
-                            repeatExecute= "newReplaceHis";
-                        }
+                        repeatExecute= "newReplaceHis";
                     }else{
                         logger.error("网站等级判定异常[title:"+esNotice.getTitle()+"][新公告等级:+"+esNotice.getRank()+"]:[esnt.title:"+esnt.getTitle()+"][匹配公告等级:"+esnt.getRank()+"]");
                     }
 
-                    logger.debug("网站等级判断完毕[repeatExecute:"+repeatExecute+"][esNotice.getRank():"+esNotice.getRank()+"][esnt.getRank():"+esnt.getRank()+"]");
+                    logger.info("网站等级判断完毕[repeatExecute:"+repeatExecute+"][esNotice.getRank():"+esNotice.getRank()+"][esnt.getRank():"+esnt.getRank()+"]");
 
                     if (repeatExecute.equals("newReplaceHis")) {
                         if (!isReplaced) {
@@ -591,6 +569,7 @@ public abstract class HunanBaseRule {
                             continue;
                         }
                     }
+                    logger.info("去重执行处理完毕。[repeatExecute:"+repeatExecute+"]");
 
                 }
             }

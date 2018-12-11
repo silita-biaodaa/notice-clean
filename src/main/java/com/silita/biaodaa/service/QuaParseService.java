@@ -45,7 +45,6 @@ public class QuaParseService {
      * 招标公告资质匹配
      */
     public List insertUrlCert(int id , EsNotice notice) {
-        //公告信息
         SoftReference<String> contentRef = new SoftReference<String>(notice.getPressContent());
         List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();
         String source = notice.getSource();
@@ -317,7 +316,7 @@ public class QuaParseService {
             zhaobiaoDoc.setTableName(notice.getTableName());    //表名
 
             saveOrUpdate(zhaobiaoDoc);
-
+            zhaobiaoDoc=null;
         }
     }
 

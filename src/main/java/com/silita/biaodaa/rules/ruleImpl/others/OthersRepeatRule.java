@@ -31,6 +31,8 @@ public class OthersRepeatRule extends HunanBaseRule implements RepeatRule {
         }catch (Exception e){
             logger.error("全国公告异常，[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]",e);
             throw e;
+        }finally {
+            esNotice = null;
         }
     }
 

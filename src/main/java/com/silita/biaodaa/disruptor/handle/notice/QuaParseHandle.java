@@ -33,6 +33,8 @@ public class QuaParseHandle implements EventHandler<AnalyzeEvent> {
         }catch (Exception e){
             logger.error("全国公告资质处理出错，"+e,e);
         }finally {
+            esNotice.setContent(null);
+            esNotice.setPressContent(null);
             esNotice=null;
         }
     }

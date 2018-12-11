@@ -50,7 +50,7 @@
         det.id DESC,
         </if>
         a.id DESC
-        limit 0,1000
+        limit 0,100
     </select>
 
 </mapper>

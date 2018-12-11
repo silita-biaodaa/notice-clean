@@ -1,6 +1,7 @@
 package com.silita.biaodaa.service;
 
 import com.silita.biaodaa.utils.MyStringUtils;
+import com.snatch.model.EsNotice;
 import org.apache.commons.collections.list.TreeList;
 import org.junit.Test;
 
@@ -146,6 +147,28 @@ public class SingleTest {
             resList.add(tmp);
         }
         return resList;
+    }
+
+    @Test
+    public void testParamClear(){
+//        EsNotice esNotice = new EsNotice();
+//        System.out.println(esNotice);
+//        resetCbj(esNotice);
+//        System.out.println(esNotice);
+        String s = "11";
+        System.out.println(s);
+        resetStr(s);
+        System.out.println(s);
+    }
+
+    private void resetCbj(EsNotice esNotice){
+        esNotice=null;
+        System.out.println(esNotice);
+    }
+
+    private void resetStr(String ss){
+        ss=null;
+        System.out.println(ss);
     }
 
 }

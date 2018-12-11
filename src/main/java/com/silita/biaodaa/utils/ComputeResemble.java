@@ -28,7 +28,8 @@ public class ComputeResemble {
     }
 
     /**
-     * 相似度计算前，进行参数换位
+     * 相似度计算
+     * 计算前，修正参数位置
      * @param strA
      * @param strB
      * @return
@@ -45,7 +46,7 @@ public class ComputeResemble {
     /*
     * 计算相似度
     * */
-    public static double SimilarDegree(String strA, String strB){
+    private static double SimilarDegree(String strA, String strB){
         String newStrA = removeSign(strA);
         String newStrB = removeSign(strB);
         //用较大的字符串长度作为分母，相似子串作为分子计算出字串相似度
@@ -58,7 +59,7 @@ public class ComputeResemble {
     /*
      * 将字符串的所有数据依次写成一行
      * */
-    public static String removeSign(String str) {
+    private static String removeSign(String str) {
         StringBuffer sb = new StringBuffer();
         //遍历字符串str,如果是汉字数字或字母，则追加到ab上面
         for (char item : str.toCharArray())
@@ -73,7 +74,7 @@ public class ComputeResemble {
      * 判断字符是否为汉字，数字和字母，
      * 因为对符号进行相似度比较没有实际意义，故符号不加入考虑范围。
      * */
-    public static boolean charReg(char charValue) {
+    private static boolean charReg(char charValue) {
         return (charValue >= 0x4E00 && charValue <= 0X9FA5) || (charValue >= 'a' && charValue <= 'z')
                 || (charValue >= 'A' && charValue <= 'Z')  || (charValue >= '0' && charValue <= '9');
     }

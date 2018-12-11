@@ -51,7 +51,6 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
         c = c.replaceAll("[\"“”]","\\\"");
         n.setContent(c);
         c=null;
-        System.gc();
     }
 
     /**
@@ -143,7 +142,7 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
     //                    filterState = filterV15(esNotice,matchSet);//V1.5版本规则
                             long t = System.currentTimeMillis();
                             logger.info("@@@开始执行过滤规则[redis:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"]。。。");
-                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.7版本过滤规则
+                            filterState = repeatFilter.filterRule(esNotice, matchSet);//V1.8版本过滤规则
                             logger.info("@@@过滤规则执行完毕[filterState:"+filterState+"][redis:"+esNotice.getRedisId()+"][title:"+esNotice.getTitle()+"]。。。"+(System.currentTimeMillis()-t)+"ms");
                         }
                         isRetry = false;
@@ -174,6 +173,7 @@ public class CommonRepeatRule extends HunanBaseRule implements RepeatRule {
             logger.error("###去重规则异常[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][ur:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]："+e,e);
         }finally {
             matchSet=null;
+            esNotice = null;
             System.gc();
         }
         return isNewNotice;

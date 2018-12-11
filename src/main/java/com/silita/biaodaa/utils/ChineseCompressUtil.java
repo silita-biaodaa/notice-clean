@@ -30,20 +30,9 @@ public class ChineseCompressUtil {
 		NodeTraversor traversor = new NodeTraversor(formatter);
 		traversor.traverse(element); // walk the DOM, and call .head() and
 		element.select("a,u,b,font,img,br,pre").unwrap();
-		String[] clearArr={
-				"<span>","</span>",
-				"[　]*","\\n\\s*",
-				"<[a-zA-Z0-9/]+:[\\w\\s='\"-\\:;@\\,~]+>",
-				"<!---->","<p></p>",
-				"<strong>","</strong>",
-				"/span",
-				"&\\S{1,5};","nbsp;",
-				"[  ]"
-				};
+		String clearArr= "(<span>)|(</span>)|([　])|(\\n\\s*)|(<[a-zA-Z0-9/]+:[\\w\\s='\"-\\:;@\\,~]+>)|(<!---->)|(<p></p>)|(<strong>)|(</strong>)|(/span)|(&\\S{1,5};)|(nbsp;)|([  ])";
 		String text = element.select("body").html();
-		for(int i=0;i<clearArr.length;i++) {
-			text = text.replaceAll(clearArr[i], "");
-		}
+		text = text.replaceAll(clearArr, "");
 		text = text.replace("<table>", "<table class='table table-bordered'>");
 		return text;
 	}
