@@ -41,5 +41,8 @@ public interface SnatchpressMapper extends MyMapper<Snatchpress> {
 
     List<String> getBuildZh(Map<String,Object> param);
 
+    List<Map<String,Object>> queryQuaCategory(Map param);
 
+
+    List<Map<String,Object>> queryQuaCategoryAlias(Map param);
 }

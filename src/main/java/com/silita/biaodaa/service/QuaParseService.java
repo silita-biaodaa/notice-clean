@@ -16,7 +16,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Service;
 
-import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +31,7 @@ public class QuaParseService {
     SnatchpressMapper snatchpressMapper;
 
     @Autowired
-    ZhService ZhService;
+    ZhService zhService;
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
@@ -40,97 +39,110 @@ public class QuaParseService {
     @Autowired
     private CleanMapper cleanMapper;
 
+    private void hitCertInfo(Map<String, Object> hitMap,String content, int nIdx, List<Map<String,Object>> zh){
+        if(nIdx != -1){
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put("name", hitMap.get("name"));//匹配公告资质最全名称
+            map.put("uuid", hitMap.get("mainUUid"));//匹配资质类型id
+            map.put("rank", hitMap.get("rank").toString());//等级
+            String str="";
+            if(content.indexOf("安全生产许可证") != -1){//查找安全生产许可证
+                map.put("licence","yes");//有安全生产许可证条件
+            }
+            if(nIdx>5){
+                str= content.substring(nIdx-5,nIdx);//查找和
+            }
+            if(str.indexOf("和") !=-1){
+                map.put("type", "AND");//和
+            }else{
+                map.put("type", "OR");//或
+            }
+
+            for(int j=0;j<zh.size();j++ ){
+                if(map.get("uuid").equals(zh.get(j).get("uuid"))){
+                    if(Integer.parseInt(map.get("rank").toString())>Integer.parseInt(zh.get(j).get("rank").toString())){
+                        zh.remove(j);
+                        zh.add(j,map);
+                    }
+                    map=null;
+                    break;
+                }
+            }
+            if(map!=null){
+                zh.add(map);
+            }
+        }
+    }
 
     /**
      * 招标公告资质匹配
      */
-    public List insertUrlCert(int id , EsNotice notice) {
-        SoftReference<String> contentRef = new SoftReference<String>(notice.getPressContent());
-        List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();
+    @Deprecated
+    public List insertUrlCert(EsNotice notice) {
+        int id = Integer.parseInt(notice.getUuid());
         String source = notice.getSource();
+        SoftReference<String> contentRef = new SoftReference<String>(notice.getPressContent());
+        List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();//命中的资质别名集合
 
-        List<Map<String, Object>> list = ZhService.queryzh();
+        List<Map<String, Object>> list = zhService.queryzh();
         for (int i = 0; i < list.size(); i++) {
-            int num = contentRef.get().indexOf(list.get(i).get("name").toString());
-            if(num != -1){
-                Map<String, Object> map = new HashMap<String, Object>();
-                map.put("name", list.get(i).get("name"));//匹配公告资质最全名称
-                map.put("uuid", list.get(i).get("mainUUid"));//匹配资质类型id
-                map.put("rank", list.get(i).get("rank").toString());//等级
-                String str="";
-                if(contentRef.get().indexOf("安全生产许可证") != -1){//查找安全生产许可证
-                    map.put("licence","yes");//有安全生产许可证条件
-                }
-                if(num>5){
-                    str= contentRef.get().substring(num-5,num);//查找和
-                }
-                if(str.indexOf("和") !=-1){
-                    map.put("type", "AND");//和
-                }else{
-                    map.put("type", "OR");//或
-                }
+            int nIdx = contentRef.get().indexOf(list.get(i).get("name").toString());
 
-                for(int j=0;j<zh.size();j++ ){
-                    if(map.get("uuid").equals(zh.get(j).get("uuid"))){
-                        if(Integer.parseInt(map.get("rank").toString())>Integer.parseInt(zh.get(j).get("rank").toString())){
-                            zh.remove(j);
-                            zh.add(j,map);
-                        }
-                        map=null;
-                        break;
-                    }
-                }
-                if(map!=null){
-                    zh.add(map);
-                }
-            }
+            //命中别名的资质进入集合筛选
+            hitCertInfo(list.get(i),contentRef.get(),nIdx,zh);
         }
         list=null;
 
-        //查询数据库中的资质规则（旧）进行解析
-//        if (zh.size() == 0) {
-//            String zzRank = "";
-//            String rangeHtml = "";
-//            List<Map<String, Object>> arList = snatchpressMapper.queryAnalyzeRangeByField("zzRank");
-//            for (int k = 0; k < arList.size(); k++) {
-//                String start = arList.get(k).get("rangeStart").toString();
-//                String end = arList.get(k).get("rangeEnd").toString();
-//                int indexStart = 0;
-//                int indexEnd = 0;
-//                if (!"".equals(start)) {
-//                    indexStart = contentRef.get().indexOf(start);//范围开始位置
-//                }
-//                if (!"".equals(end)) {
-//                    indexEnd = contentRef.get().lastIndexOf(end);
-//                }
-//                if (indexStart != -1 && indexEnd != -1) {
-//                    if (indexEnd > indexStart) {
-//                        rangeHtml = contentRef.get().substring(indexStart, indexEnd);
-//                        rangeHtml = rangeHtml.replaceAll("\\s*", "");    //去空格
-//                        if (rangeHtml.length() > 30) {
-//                            rangeHtml = rangeHtml.substring(0, 30);
-//                        }
-//                        zzRank = rangeHtml.replace("颁发的", "").replace("核发的", "").replace("具备", "").replace("具有", "");
-//                        if (zzRank.indexOf("级") == -1) {
-//                            zzRank = "";
-//                        }
-//                        if (zzRank.length() > 0) {
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//            if (!"".equals(zzRank)) {
-//                String message = "";
-//                logger.info("#####为解析到" + zzRank + "#####");
-//                Map<String,Object> param = new HashMap<>();
-//                param.put("snatchUrlId",id);
-//                param.put("aptitude",zzRank);
-//                param.put("snatchContent",message);
-//                snatchpressMapper.insertUnanalysis_aptitude(param);
-//            }
-//        }
+        //插入匹配的资质记录
+        certsAliaMatch(zh,id,source);
+        return zh;
+    }
 
+    /**
+     * 招标公告资质匹配（优化方案）
+     */
+    public List insertUrlCertOpt(EsNotice notice) {
+        int id = Integer.parseInt(notice.getUuid());
+        String source = notice.getSource();
+        SoftReference<String> contentRef = new SoftReference<String>(notice.getPressContent());
+        List<Map<String,Object>> zh =new ArrayList<Map<String,Object>>();//命中的资质别名集合
+
+        List<Map<String, Object>> quaClasses = zhService.queryQuaCategory(Constant.preSize);
+        logger.debug("quaClasses:"+quaClasses.size());
+        List<String> matchPreList = new ArrayList<>();
+
+        for (Map<String, Object> quaClass :quaClasses) {
+            String pName = quaClass.get("preName").toString();
+            int nIdx = contentRef.get().indexOf(pName);
+            if(nIdx != -1){
+                matchPreList.add(pName);
+            }
+        }
+        quaClasses=null;
+
+        Map<String,List<Map<String, Object>>> sortAliaMap = zhService.sortQuaAlias(Constant.preSize);
+        logger.debug("sortAliaMap:"+sortAliaMap.size());
+        List<Map<String, Object>> aliaList = new ArrayList<>();//需要遍历的别名集合
+        for(String hitPreName: matchPreList){
+          if(sortAliaMap.containsKey(hitPreName)){
+              aliaList.addAll(sortAliaMap.get(hitPreName));
+          }
+        }
+
+        if(!aliaList.isEmpty()) {
+            for(int i = 0; i<aliaList.size();i++){
+                int nIdx = contentRef.get().indexOf(aliaList.get(i).get("name").toString());
+                hitCertInfo(aliaList.get(i), contentRef.get(), nIdx, zh);
+            }
+        }
+
+        //插入匹配的资质记录
+        certsAliaMatch(zh,id,source);
+        return zh;
+    }
+
+
+    private void certsAliaMatch(List<Map<String,Object>> zh,int id,String source){
         boolean hasZz= false;
         for (int k = 0; k < zh.size(); k++) {
             Map<String, Object> mapname = snatchpressMapper.getAptitudeDictionary(zh.get(k).get("uuid").toString());
@@ -155,6 +167,7 @@ public class QuaParseService {
                 }
             }
         }
+
         if(hasZz){
             //有资质，更新排序状态
             Map param = new HashMap<String, Object>();
@@ -163,10 +176,14 @@ public class QuaParseService {
             param.put("orderNo",2);
             cleanMapper.updateNoticePx(param);
         }
+    }
 
-        //公告建造师匹配暂停
-//        insertUrlBuild(id,contentRef);
-
+    /**
+     * 更新公告对应的es信息（仅湖南）
+     * @param notice
+     */
+    public void updateEsInfo(EsNotice notice){
+        String source = notice.getSource();
         //仅湖南公告更新es
         if (source==null || source.equals(Constant.HUNAN_SOURCE)) {
             String insertEs = (String) CustomizedPropertyConfigurer.getContextProperty("es.data.send");
@@ -183,65 +200,8 @@ public class QuaParseService {
         }else{
             //全国公告暂无es操作
         }
-
-        return zh;
     }
 
-    /**
-     * 招标公告建造师匹配
-     */
-    public void insertUrlBuild(int id,Reference<String> contentRef) {
-        String zz="";
-        String muuid="";
-        String licence="";//安全生产许可证
-        int rank=0;
-        String uuid="";
-        String content = contentRef.get();
-        int star = content.indexOf("注册建造师");
-        if(star != -1){
-            String str= content.substring(star-20,star+50);
-            List<Map<String,Object>> list= ZhService.getBuildZhList();
-            for (int i = 0; i < list.size(); i++) {
-                int num =str.indexOf(list.get(i).get("name").toString());
-                if(num != -1){
-                    if(list.get(i).get("name").toString().length()>zz.length()){
-                        zz = list.get(i).get("name").toString();
-                        muuid = list.get(i).get("mainUUid").toString();
-                        rank = Integer.parseInt(list.get(i).get("rank").toString());
-                    }
-                    if(str.indexOf("B") != -1 ||str.indexOf("Ｂ")!=-1){
-                        licence="B";
-                    }else if(str.indexOf("A") != -1 ||str.indexOf("Ａ")!=-1){
-                        licence="A";
-                    }
-                }
-            }
-
-
-            Map<String,Object> paramZh = new HashMap<>();
-            paramZh.put("muuid",muuid);
-            paramZh.put("rank",rank);
-            List<String> all = snatchpressMapper.getBuildZh(paramZh);
-
-
-            for (int j = 0; j < all.size(); j++) {
-                if(uuid.equals("")) {
-                    //zzall +=all.get(j).get("name").toString();
-                    uuid +=all.get(j);
-                }
-                else{
-                    //zzall +=","+all.get(j).get("name").toString();
-                    uuid +=","+all.get(j);
-                }
-            }
-            Map<String,Object> param = new HashMap<>();
-            param.put("contId",id);
-            param.put("certificate",zz);
-            param.put("certificateUUid",uuid);
-            param.put("licence",licence);
-            snatchpressMapper.insertSnatchUrlBuild(param);
-        }
-    }
 
     public void insertZhaobiaoEsNotice(EsNotice notice) {
         if(notice != null) {
