@@ -45,7 +45,7 @@ public class CleaningTemplateImpl implements CleaningTemplate {
         //1.公告去重
         logger.info("#####去重规则开始[redisId:"+esNotice.getRedisId()+"][source:"+esNotice.getSource()+"][url:"+esNotice.getUrl()+"][title:" + esNotice.getTitle() + "][openDate:"+esNotice.getOpenDate()+"]");
         boolean repeatStatus = repeatRule.executeRule(esNotice);
-        logger.info("#####去重执行完毕，[title:"+esNotice.getTitle()+"][redisId:"+esNotice.getRedisId()+"][repeatStatus+"+repeatStatus+"][url:"+esNotice.getUrl()+"][relationFlag:"+relationFlag+"]" +
+        logger.info("#####去重执行完毕，[title:"+esNotice.getTitle()+"][redisId:"+esNotice.getRedisId()+"][repeatStatus:"+repeatStatus+"][url:"+esNotice.getUrl()+"][relationFlag:"+relationFlag+"]" +
                 "\n去重消耗时间：" + (System.currentTimeMillis() - repStartTime) +" ms #####");
         //2.全国公告，解析内容直接插入到编辑表
         if(repeatStatus){

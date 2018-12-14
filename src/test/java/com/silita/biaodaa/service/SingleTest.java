@@ -1,6 +1,7 @@
 package com.silita.biaodaa.service;
 
 import com.silita.biaodaa.utils.MyStringUtils;
+import com.snatch.model.EsNotice;
 import org.apache.commons.collections.list.TreeList;
 import org.junit.Test;
 
@@ -147,5 +148,104 @@ public class SingleTest {
         }
         return resList;
     }
+
+    @Test
+    public void testParamClear(){
+//        EsNotice esNotice = new EsNotice();
+//        System.out.println(esNotice);
+//        resetCbj(esNotice);
+//        System.out.println(esNotice);
+        String s = "11";
+        System.out.println(s);
+        resetStr(s);
+        System.out.println(s);
+    }
+
+    private void resetCbj(EsNotice esNotice){
+        esNotice=null;
+        System.out.println(esNotice);
+    }
+
+    private void resetStr(String ss){
+        ss=null;
+        System.out.println(ss);
+    }
+
+
+    @Test
+    public void testParam(){
+        List t = new ArrayList<>();
+        t.add(1);
+        Map map = new HashMap();
+        map.put(1,t);
+        t=null;
+        System.out.println(t);
+        System.out.println(map.get(1));
+    }
+
+    @Test
+    public void testSort(){
+        List<Map<String,Object>> list = new ArrayList<>();
+        for(int i=1;i<5;i++) {
+            Map t = new HashMap();
+            t.put("preName", "first");
+            t.put("uuid", "first" + i);
+            list.add(t);
+        }
+
+        for(int i=0;i<10;i++){
+            Map m = new HashMap();
+            m.put("preName","p111");
+            m.put("uuid","p111"+i);
+            list.add(m);
+        }
+        for(int i=99;i<110;i++){
+            Map m = new HashMap();
+            m.put("preName","sssss");
+            m.put("uuid","sssss"+i);
+            list.add(m);
+        }
+
+        for(int i=22;i<33;i++){
+            Map m = new HashMap();
+            m.put("preName","last");
+            m.put("uuid","last"+i);
+            list.add(m);
+        }
+
+        Map<String,List<Map>> map = new HashMap<>(20);
+        sortToMap(list,map);
+        System.out.println(map.toString());
+    }
+
+    private Map<String,List<Map>> sortToMap(List<Map<String,Object>>  quaAlias,Map sortAlias){
+        List<Map<String,Object>> tmpList = null;
+        String beforeName = null;
+        int len = quaAlias.size();
+        for(int i=0; i<len;i++){
+            Map aliaMap = quaAlias.get(i);
+            String preName = aliaMap.get("preName").toString();
+            if(i==0){
+                beforeName= preName;
+                tmpList = new ArrayList<>();
+                tmpList.add(aliaMap);
+            }else{
+                if (!preName.equals(beforeName)) {
+                    sortAlias.put(beforeName, tmpList);
+                    beforeName = preName;
+                    tmpList = new ArrayList<>();
+                }else{
+                }
+                tmpList.add(aliaMap);
+            }
+            if(i==len-1) {//收尾
+                if(!tmpList.isEmpty()) {
+                    sortAlias.put(preName, tmpList);
+                }
+            }
+        }
+        return sortAlias;
+    }
+
 
 }

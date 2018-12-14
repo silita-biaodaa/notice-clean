@@ -38,7 +38,8 @@
   </select>
 
   <insert id="insertSnatchUrlCert" parameterType="Map">
-    INSERT INTO ${certTable} (contId,certificate,certificateUUid,type,licence,
+    INSERT INTO ${certTable}
+    (contId,certificate,certificateUUid,type,licence,
     source)
     VALUES
     (#{contId},#{certificate},#{certificateUUid},#{type},#{licence},
@@ -73,6 +74,22 @@
 
   </select>
 
+  <select id="queryQuaCategory" parameterType="Map" resultType="Map">
+    SELECT  DISTINCT SUBSTRING(NAME,1,#{preSize}) as preName,count(mainuuid) as preNameSize
+    FROM mishu.all_zh
+    WHERE rank !='' AND finalUuid !='' AND finalUuid IS NOT NULL
+    <!-- AND LENGTH(NAME)>#{preChiSize}-->
+    group by SUBSTRING(NAME,1,#{preSize})
+    ORDER BY COUNT(mainuuid) desc
+  </select>
+
+  <select id="queryQuaCategoryAlias" parameterType="Map" resultType="Map">
+    SELECT distinct SUBSTRING(m.name,1,#{preSize}) as preName,m.name,m.mainUUid, m.rank
+    FROM mishu.all_zh m
+    WHERE exists(select ap.id from mishu.aptitude_dictionary ap where m.mainUuid=ap.majorUuid)
+       and m.rank !='' AND m.finalUuid !='' AND m.finalUuid IS NOT NULL
+    order by SUBSTRING(m.name,1,#{preSize}) asc
+  </select>
 
 
 </mapper>

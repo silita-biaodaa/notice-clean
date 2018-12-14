@@ -16,6 +16,6 @@ public class EndingHandle implements EventHandler<AnalyzeEvent> {
     public void onEvent(AnalyzeEvent event, long sequence, boolean endOfBatch) throws Exception {
         event.setEsNotice(null);
         event=null;
-        logger.debug("###EndingHandle###"+sequence);
+        logger.info("###EndingHandle###"+sequence);
     }
 }

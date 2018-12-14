@@ -22,11 +22,26 @@
             diskExpiryThreadIntervalSeconds="100"    
             memoryStoreEvictionPolicy="LFU"    
             />
-    <cache name="allZhCache"  maxEntriesLocalHeap="10000"
-           maxElementsOnDisk="20000" eternal="false" overflowToDisk="true"
-           diskSpoolBufferSizeMB="20" timeToIdleSeconds="600" timeToLiveSeconds="3600"
+
+
+    <!--资质大类（前缀）对应的别名明细 -->
+    <cache name="sortQuaAlias"  maxEntriesLocalHeap="1000000"
+           maxElementsOnDisk="2000000" eternal="false"
+           overflowToDisk="true"
+           diskSpoolBufferSizeMB="30" timeToIdleSeconds="86400" timeToLiveSeconds="259200"
            memoryStoreEvictionPolicy="LFU" />
 
+    <!--资质前缀分类 -->
+    <cache name="preCertCache"  maxEntriesLocalHeap="1000000"
+           maxElementsOnDisk="2000000" eternal="false"
+           overflowToDisk="true"
+           diskSpoolBufferSizeMB="80" timeToIdleSeconds="86400" timeToLiveSeconds="259200"
+           memoryStoreEvictionPolicy="LFU" />
+
+    <cache name="allZhCache"  maxEntriesLocalHeap="100000"
+           maxElementsOnDisk="20000" eternal="false" overflowToDisk="true"
+           diskSpoolBufferSizeMB="50" timeToIdleSeconds="6000" timeToLiveSeconds="5600"
+           memoryStoreEvictionPolicy="LFU" />
 
     <cache name="similarityNotice"  maxEntriesLocalHeap="1000"
            maxElementsOnDisk="20000" eternal="false" overflowToDisk="true"

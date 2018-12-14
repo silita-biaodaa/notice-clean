@@ -557,96 +557,96 @@ public static String htmlspecialchars(String str) {
  * @return
  */
 public static String spellUuid(String uuid,String rank) {
-	String str="";
+	StringBuilder str=new StringBuilder();
 	//特级
 	if("0".equals(rank)){
-		str +=uuid+"/0";
+		str.append(uuid).append("/0");
 	}
 	//一级
 	else if("1".equals(rank)){
-		str +=uuid+"/1";
+		str.append(uuid).append("/1");
 	}
 	//二级
 	else if("2".equals(rank)){
-		str +=uuid+"/2";
+		str.append(uuid).append("/2");
 	}
 	//三级
 	else if("3".equals(rank)){
-		str +=uuid+"/3";
+		str.append(uuid).append("/3");
 	}
 	//一级及以上
 	else if("u1".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1";
+		str.append(uuid).append("/0,").append(uuid).append("/1");
 	}
 	//二级及以上
 	else if("u2".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1"+","+uuid+"/2";
+		str.append(uuid).append("/0,").append(uuid).append("/1,").append(uuid).append("/2");
 	}
 	//三级及以上
 	else if("u3".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1"+","+uuid+"/2"+","+uuid+"/3";
+		str.append(uuid).append("/0,").append(uuid).append("/1,").append(uuid).append("/2,").append(uuid).append("/3");
 	}
 	//特级及以下
 	else if("d0".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1"+","+uuid+"/2"+","+uuid+"/3";
+		str.append(uuid).append("/0,").append(uuid).append("/1,").append(uuid).append("/2,").append(uuid).append("/3");
 	}
 	//一级及以下
 	else if("d1".equals(rank)){
-		str +=uuid+"/1"+","+uuid+"/2"+","+uuid+"/3";
+		str.append(uuid).append("/1,").append(uuid).append("/2,").append(uuid).append("/3");
 	}
 	//二级及以下
 	else if("d2".equals(rank)){
-		str +=uuid+"/2"+","+uuid+"/3";
+		str.append(uuid).append("/2,").append(uuid).append("/3");
 	}
 	//一级及以上
 	else if("11".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1";
+		str.append(uuid).append("/0,").append(uuid).append("/1");
 	}
 	//二级及以上
 	else if("21".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1"+","+uuid+"/2";
+		str.append(uuid).append("/0,").append(uuid).append("/1,").append(uuid).append("/2");
 	}
 	//三级及以上
 	else if("31".equals(rank)){
-		str +=uuid+"/0"+","+uuid+"/1"+","+uuid+"/2"+","+uuid+"/3";
+		str.append(uuid).append("/0,").append(uuid).append("/1,").append(uuid).append("/2,").append(uuid).append("/3");
 	}
 	//无等级
 	else if("".equals(rank)){
-		str +=uuid+"/";
+		str.append(uuid).append("/");
 	}
 	//甲级
 	else if("-1".equals(rank)){
-		str +=uuid+"/-1";
+		str.append(uuid).append("/-1");
 	}
 	//乙级
 	else if("-2".equals(rank)){
-		str +=uuid+"/-2";
+		str.append(uuid).append("/-2");
 	}
 	//丙级
 	else if("-3".equals(rank)){
-		str +=uuid+"/-3";
+		str.append(uuid).append("/-3");
 	}
 	//乙级及以上
 	else if("-21".equals(rank)){
-		str +=uuid+"/-1"+","+uuid+"/-2";
+		str.append(uuid).append("/-1,").append(uuid).append("/-2");
 	}
 	//丙级及以上
 	else if("-31".equals(rank)){
-		str +=uuid+"/-1"+","+uuid+"/-2"+","+uuid+"/-3";
+		str.append(uuid).append("/-1,").append(uuid).append("/-2,").append(uuid).append("/-3");
 	}
 	//乙级及以上
 	else if("u-2".equals(rank)){
-		str +=uuid+"/-1"+","+uuid+"/-2";
+		str.append(uuid).append("/-1,").append(uuid).append("/-2");
 	}
 	//丙级及以上
 	else if("u-3".equals(rank)){
-		str +=uuid+"/-1"+","+uuid+"/-2"+","+uuid+"/-3";
+		str.append(uuid).append("/-1,").append(uuid+"/-2,").append(uuid).append("/-3");
 	}
 	else{
-		str +=uuid+"/";
+		str.append(uuid).append("/");
 	}
 
-	return str;
+	return str.toString();
 }
 
 /**
@@ -655,64 +655,64 @@ public static String spellUuid(String uuid,String rank) {
  * @return
  */
 public static String spellRank(String rank) {
-	String str="";
+	StringBuilder str=new StringBuilder();
 	//特级
 	if("0".equals(rank)){
-		str +="特级";
+		str .append("特级");
 	}
 	//一级
 	else if("1".equals(rank)){
-		str +="一级";
+		str .append("一级");
 	}
 	//二级
 	else if("2".equals(rank)){
-		str +="二级";
+		str .append("二级");
 	}
 	//三级
 	else if("3".equals(rank)){
-		str +="三级";
+		str .append("三级");
 	}
 	//一级及以上
 	else if("11".equals(rank)){
-		str +="一级及以上";
+		str .append("一级及以上");
 	}
 	//二级及以上
 	else if("21".equals(rank)){
-		str +="二级及以上";
+		str .append("二级及以上");
 	}
 	//三级及以上
 	else if("31".equals(rank)){
-		str +="三级及以上";
+		str .append("三级及以上");
 	}
 	//无等级
 	else if("".equals(rank)){
-		str +="无等级";
+		str .append("无等级");
 	}
 	//甲级
 	else if("-1".equals(rank)){
-		str +="甲级";
+		str .append("甲级");
 	}
 	//乙级
 	else if("-2".equals(rank)){
-		str +="乙级";
+		str .append("乙级");
 	}
 	//丙级
 	else if("-3".equals(rank)){
-		str +="丙级";
+		str .append("丙级");
 	}
 	//乙级及以上
 	else if("-21".equals(rank)){
-		str +="乙级及以上";
+		str .append("乙级及以上");
 	}
 	//丙级及以上
 	else if("-31".equals(rank)){
-		str +="丙级及以上";
+		str .append("丙级及以上");
 	}
 	else{
-		str +="无等级";
+		str .append("无等级");
 	}
 
-	return str;
+	return str.toString();
 }
 
 //截取数字
